@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <windows.h>
-#include "utils.c"
 
 struct
 {
@@ -13,9 +12,12 @@ struct
 	BITMAPINFO bitmapInfo;
 } typedef RenderBuffer;
 
+#include "utils.c"	// this needs to be first as it defines some #defines used in the other *.c files
 #include "software_rendering.c"
 #include "math.c"
 
+global_variable b32 isRunning = true;
+global_variable b32 showRectangle = false;
 global_variable RenderBuffer renderBuffer;
 
 internal LRESULT windowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -85,13 +87,39 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		MSG message;
 		while(PeekMessageA(&message, window, 0, 0, PM_REMOVE))
 		{
-			TranslateMessage(&message);
-			DispatchMessage(&message);
+			switch(message.message)
+			{
+				case WM_SYSKEYDOWN:
+				case WM_SYSKEYUP:
+				case WM_KEYDOWN:
+				case WM_KEYUP:
+				{
+					uint32_t vkCode = (uint32_t)message.wParam;
+					b32 wasDown = ((message.lParam & (1 << 30)) != 0);
+					b32 isDown = ((message.lParam & (1 << 31)) == 0);
+
+					if (vkCode == VK_LEFT)
+					{
+						showRectangle = isDown;
+					}
+
+					break;
+				}
+
+				default:
+				{
+					TranslateMessage(&message);
+					DispatchMessage(&message);
+				}
+			}
 		}
 
 		// simulation
 		ClearScreen(&renderBuffer, 0x551100);
-		DrawRectInPixels(&renderBuffer, 0xFFFF00, 200, 200, 500, 500);
+		if (showRectangle)
+		{
+			DrawRectInPixels(&renderBuffer, 0xFFFF00, 200, 200, 500, 500);
+		}
 
 		// render
 		StretchDIBits(hdc,

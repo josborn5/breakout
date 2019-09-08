@@ -5,5 +5,3 @@ typedef int b32;
 
 #define global_variable static
 #define internal static
-
-global_variable b32 isRunning = true;
