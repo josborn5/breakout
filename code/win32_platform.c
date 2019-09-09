@@ -15,6 +15,8 @@ struct
 #include "utils.c"	// this needs to be first as it defines some #defines used in the other *.c files
 #include "software_rendering.c"
 #include "math.c"
+#include "platform_common.c"
+#include "game.c"
 
 global_variable b32 isRunning = true;
 global_variable b32 showRectangle = false;
@@ -66,6 +68,15 @@ internal LRESULT windowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return result;
 }
 
+internal void ProcessButton(int vkCode, b32 isDown, b32 wasDown, Button *button, int vkButton)
+{
+	if (vkCode == vkButton)
+	{
+		button->isDown = isDown;
+		button->changed = (isDown != wasDown);
+	}
+}
+
 int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
 	WNDCLASSA windowClass = {0};
@@ -80,6 +91,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 									CW_USEDEFAULT, CW_USEDEFAULT,
 									1280, 720, 0, 0, 0, 0);
 	HDC hdc = GetDC(window);
+	Input input = {0};
 
 	while(isRunning)
 	{
@@ -98,10 +110,10 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 					b32 wasDown = ((message.lParam & (1 << 30)) != 0);
 					b32 isDown = ((message.lParam & (1 << 31)) == 0);
 
-					if (vkCode == VK_LEFT)
-					{
-						showRectangle = isDown;
-					}
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_LEFT], VK_LEFT);
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_RIGHT], VK_RIGHT);
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_UP], VK_UP);
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_DOWN], VK_DOWN);
 
 					break;
 				}
@@ -115,11 +127,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		}
 
 		// simulation
-		ClearScreen(&renderBuffer, 0x551100);
-		if (showRectangle)
-		{
-			DrawRectInPixels(&renderBuffer, 0xFFFF00, 200, 200, 500, 500);
-		}
+		SimulateGame(&input, renderBuffer);
 
 		// render
 		StretchDIBits(hdc,
