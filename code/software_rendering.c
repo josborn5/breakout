@@ -1,3 +1,5 @@
+internal const float aspectRatio = 1.77f; // 16:9
+
 internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 {
 	uint32_t *pixel = renderBuffer->pixels;
@@ -31,4 +33,33 @@ internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x
 			pixel++;
 		}
 	}
+}
+
+internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D halfSize, Vector2D p)
+{
+	float aspectRatioFactor = (float)renderBuffer->width;
+
+	if (((float)renderBuffer->width / (float)renderBuffer->height) < aspectRatio)
+	{
+		aspectRatioFactor = (float)renderBuffer->height;
+	}
+
+	// factor half size for window size
+	float scale = 0.001f;
+	halfSize.x *= aspectRatioFactor * scale;
+	halfSize.y *= aspectRatioFactor * scale;
+
+	// factor position for window size
+	p.x += aspectRatioFactor * scale;
+	p.y += aspectRatioFactor * scale;
+
+	p.x += (float)renderBuffer->width * .5f;
+	p.y += (float)renderBuffer->height * .5f;
+	
+	int x0 = (int)(p.x - halfSize.x);
+	int y0 = (int)(p.y - halfSize.y);
+	int x1 = (int)(p.x + halfSize.x);
+	int y1 = (int)(p.y + halfSize.y);
+
+	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
 }
