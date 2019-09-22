@@ -147,7 +147,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		QueryPerformanceCounter(&currentCounter);
 		float counterDiff = (float)(currentCounter.QuadPart - lastCounter.QuadPart);
 
-		float lastDt = counterDiff / frequencyCounter;
+		lastDt = counterDiff / frequencyCounter;
 
 		// reset for next frame
 		lastCounter = currentCounter;
