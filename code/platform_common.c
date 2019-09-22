@@ -16,9 +16,7 @@ enum
 
 struct
 {
-	int mouseX;
-	int mouseY;
-
+	Vector2D mouse;
 	Button buttons[BUTTON_COUNT];
 } typedef Input;
 

@@ -37,9 +37,37 @@ internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x
 	}
 }
 
-internal int TransformGameUnitPositionToPixelPosition(int input, float offset, float factor)
+internal int TransformGamePositionToPixelPosition(int input, float offset, float factor)
 {
 	int transformed = (int)(offset + (factor * input));
+	return transformed;
+}
+
+internal void GetPixelAndGameDimensions(RenderBuffer* renderBuffer, int* smallestPixelDimension, int* smallestUnitDimension)
+{
+	float currentAspectRatio = (float)renderBuffer->width / (float)renderBuffer->height;
+
+	b32 factorToHeight = currentAspectRatio > BASE_ASPECT_RATIO;
+
+	*smallestPixelDimension = (factorToHeight) ? renderBuffer->height : renderBuffer->width;
+	*smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE )* 2;
+}
+
+internal Vector2D TransformPixelCoordToGameCoord(RenderBuffer* renderBuffer, int x, int y)
+{
+	float horizontalOffset = 0.5f * (float)renderBuffer->width;
+	float verticalOffset = 0.5f * (float)renderBuffer->height;
+
+	int smallestPixelDimension;
+	int smallestUnitDimension;
+	GetPixelAndGameDimensions(renderBuffer, &smallestPixelDimension, &smallestUnitDimension);
+
+	float scaleFactor = (float)smallestUnitDimension / (float)smallestPixelDimension;
+
+	Vector2D transformed = {0};
+	transformed.x = (x - horizontalOffset) * scaleFactor;
+	transformed.y = (y - verticalOffset) * scaleFactor;
+
 	return transformed;
 }
 
@@ -48,12 +76,9 @@ internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D half
 	float horizontalOffset = 0.5f * (float)renderBuffer->width;
 	float verticalOffset = 0.5f * (float)renderBuffer->height;
 
-	float currentAspectRatio = (float)renderBuffer->width / (float)renderBuffer->height;
-
-	b32 factorToHeight = currentAspectRatio > BASE_ASPECT_RATIO;
-
-	int smallestPixelDimension = (factorToHeight) ? renderBuffer->height : renderBuffer->width;
-	int smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE )* 2;
+	int smallestPixelDimension;
+	int smallestUnitDimension;
+	GetPixelAndGameDimensions(renderBuffer, &smallestPixelDimension, &smallestUnitDimension);
 
 	float scaleFactor = (float)smallestPixelDimension / (float)smallestUnitDimension;
 
@@ -62,10 +87,10 @@ internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D half
 	int xU1 = (int)(p.x + halfSize.x);
 	int yU1 = (int)(p.y + halfSize.y);
 
-	int xP0 = TransformGameUnitPositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
-	int yP0 = TransformGameUnitPositionToPixelPosition(yU0, verticalOffset, scaleFactor);
-	int xP1 = TransformGameUnitPositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
-	int yP1 = TransformGameUnitPositionToPixelPosition(yU1, verticalOffset, scaleFactor);
+	int xP0 = TransformGamePositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
+	int yP0 = TransformGamePositionToPixelPosition(yU0, verticalOffset, scaleFactor);
+	int xP1 = TransformGamePositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
+	int yP1 = TransformGamePositionToPixelPosition(yU1, verticalOffset, scaleFactor);
 
 	DrawRectInPixels(renderBuffer, color, xP0, yP0, xP1, yP1);
 }

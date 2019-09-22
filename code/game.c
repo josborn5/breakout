@@ -12,5 +12,8 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	if (IsPressed(input, BUTTON_DOWN)) player.y -= positionDelta;
 
 	ClearScreen(&renderBuffer, 0x551100);
-	DrawRect(&renderBuffer, 0xFFFF00, (Vector2D){ 2, 2 }, player);
+
+	const int batThickness = 2;
+	DrawRect(&renderBuffer, 0x00FF00, (Vector2D){ 10, batThickness }, (Vector2D) { input->mouse.x, 20 - Y_DIM_BASE });
+	
 }
