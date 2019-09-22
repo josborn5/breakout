@@ -92,6 +92,13 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 									1280, 720, 0, 0, 0, 0);
 	HDC hdc = GetDC(window);
 	Input input = {0};
+	LARGE_INTEGER lastCounter;
+	QueryPerformanceCounter(&lastCounter);
+
+	LARGE_INTEGER performanceFrequencyLargeInt;
+	QueryPerformanceFrequency(&performanceFrequencyLargeInt);
+	float frequencyCounter = (float)performanceFrequencyLargeInt.QuadPart;
+	float lastDt = 0.01666f;
 
 	while(isRunning)
 	{
@@ -127,13 +134,23 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		}
 
 		// simulation
-		SimulateGame(&input, renderBuffer);
+		SimulateGame(&input, renderBuffer, lastDt);
 
 		// render
 		StretchDIBits(hdc,
 			0, 0, renderBuffer.width, renderBuffer.height,
 			0, 0, renderBuffer.width, renderBuffer.height,
 			renderBuffer.pixels, &renderBuffer.bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+
+		// Get the frame time
+		LARGE_INTEGER currentCounter;
+		QueryPerformanceCounter(&currentCounter);
+		float counterDiff = (float)(currentCounter.QuadPart - lastCounter.QuadPart);
+
+		float lastDt = counterDiff / frequencyCounter;
+
+		// reset for next frame
+		lastCounter = currentCounter;
 	}
 
 }

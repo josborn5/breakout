@@ -1,4 +1,6 @@
-internal const float aspectRatio = 1.77f; // 16:9
+internal const int X_DIM_BASE = 160;
+internal const int Y_DIM_BASE = 90;
+#define BASE_ASPECT_RATIO (X_DIM_BASE / Y_DIM_BASE)
 
 internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 {
@@ -35,31 +37,35 @@ internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x
 	}
 }
 
+internal int TransformGameUnitPositionToPixelPosition(int input, float offset, float factor)
+{
+	int transformed = (int)(offset + (factor * input));
+	return transformed;
+}
+
 internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D halfSize, Vector2D p)
 {
-	float aspectRatioFactor = (float)renderBuffer->width;
+	float horizontalOffset = 0.5f * (float)renderBuffer->width;
+	float verticalOffset = 0.5f * (float)renderBuffer->height;
 
-	if (((float)renderBuffer->width / (float)renderBuffer->height) < aspectRatio)
-	{
-		aspectRatioFactor = (float)renderBuffer->height;
-	}
+	float currentAspectRatio = (float)renderBuffer->width / (float)renderBuffer->height;
 
-	// factor half size for window size
-	float scale = 0.001f;
-	halfSize.x *= aspectRatioFactor * scale;
-	halfSize.y *= aspectRatioFactor * scale;
+	b32 factorToHeight = currentAspectRatio > BASE_ASPECT_RATIO;
 
-	// factor position for window size
-	p.x += aspectRatioFactor * scale;
-	p.y += aspectRatioFactor * scale;
+	int smallestPixelDimension = (factorToHeight) ? renderBuffer->height : renderBuffer->width;
+	int smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE )* 2;
 
-	p.x += (float)renderBuffer->width * .5f;
-	p.y += (float)renderBuffer->height * .5f;
-	
-	int x0 = (int)(p.x - halfSize.x);
-	int y0 = (int)(p.y - halfSize.y);
-	int x1 = (int)(p.x + halfSize.x);
-	int y1 = (int)(p.y + halfSize.y);
+	float scaleFactor = (float)smallestPixelDimension / (float)smallestUnitDimension;
 
-	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
+	int xU0 = (int)(p.x - halfSize.x);
+	int yU0 = (int)(p.y - halfSize.y);
+	int xU1 = (int)(p.x + halfSize.x);
+	int yU1 = (int)(p.y + halfSize.y);
+
+	int xP0 = TransformGameUnitPositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
+	int yP0 = TransformGameUnitPositionToPixelPosition(yU0, verticalOffset, scaleFactor);
+	int xP1 = TransformGameUnitPositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
+	int yP1 = TransformGameUnitPositionToPixelPosition(yU1, verticalOffset, scaleFactor);
+
+	DrawRectInPixels(renderBuffer, color, xP0, yP0, xP1, yP1);
 }
