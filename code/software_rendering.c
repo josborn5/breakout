@@ -19,10 +19,10 @@ internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0, int y0, int x1, int y1)
 {
 	// Make sure writing to the render buffer does not escape its bounds
-	x0 = Clamp(0, x0, renderBuffer->width);
-	x1 = Clamp(0, x1, renderBuffer->width);
-	y0 = Clamp(0, y0, renderBuffer->height);
-	y1 = Clamp(0, y1, renderBuffer->height);
+	x0 = ClampInt(0, x0, renderBuffer->width);
+	x1 = ClampInt(0, x1, renderBuffer->width);
+	y0 = ClampInt(0, y0, renderBuffer->height);
+	y1 = ClampInt(0, y1, renderBuffer->height);
 
 	for (int y = y0; y < y1; y++)
 	{
@@ -50,7 +50,7 @@ internal void GetPixelAndGameDimensions(RenderBuffer* renderBuffer, int* smalles
 	b32 factorToHeight = currentAspectRatio > BASE_ASPECT_RATIO;
 
 	*smallestPixelDimension = (factorToHeight) ? renderBuffer->height : renderBuffer->width;
-	*smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE )* 2;
+	*smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE ) * 2;
 }
 
 internal Vector2D TransformPixelCoordToGameCoord(RenderBuffer* renderBuffer, int x, int y)
@@ -71,7 +71,7 @@ internal Vector2D TransformPixelCoordToGameCoord(RenderBuffer* renderBuffer, int
 	return transformed;
 }
 
-internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D halfSize, Vector2D p)
+internal void TranformVectorsToPixels(RenderBuffer* renderBuffer, Vector2D halfSize, Vector2D p, int* x0, int* y0, int* x1, int* y1)
 {
 	float horizontalOffset = 0.5f * (float)renderBuffer->width;
 	float verticalOffset = 0.5f * (float)renderBuffer->height;
@@ -87,10 +87,31 @@ internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D half
 	int xU1 = (int)(p.x + halfSize.x);
 	int yU1 = (int)(p.y + halfSize.y);
 
-	int xP0 = TransformGamePositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
-	int yP0 = TransformGamePositionToPixelPosition(yU0, verticalOffset, scaleFactor);
-	int xP1 = TransformGamePositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
-	int yP1 = TransformGamePositionToPixelPosition(yU1, verticalOffset, scaleFactor);
+	*x0 = TransformGamePositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
+	*y0 = TransformGamePositionToPixelPosition(yU0, verticalOffset, scaleFactor);
+	*x1 = TransformGamePositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
+	*y1 = TransformGamePositionToPixelPosition(yU1, verticalOffset, scaleFactor);
+}
 
-	DrawRectInPixels(renderBuffer, color, xP0, yP0, xP1, yP1);
+internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D halfSize, Vector2D p)
+{
+	int x0, y0, x1, y1;
+	TranformVectorsToPixels(renderBuffer, halfSize, p, &x0, &y0, &x1, &y1);
+
+	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
+}
+
+internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
+{
+	int x0, y0, x1, y1;
+	TranformVectorsToPixels(renderBuffer, halfSize, p, &x0, &y0, &x1, &y1);
+
+	// draw the given rectangle
+	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
+
+	// draw rectangles around the given rectangle to clear the background
+	DrawRectInPixels(renderBuffer, clearColor, 0, 0, x0, renderBuffer->height);						// left of rect
+	DrawRectInPixels(renderBuffer, clearColor, x1, 0, renderBuffer->width, renderBuffer->height);	// right of rect
+	DrawRectInPixels(renderBuffer, clearColor, x0, 0, x1, y0);									// above rect
+	DrawRectInPixels(renderBuffer, clearColor, x0, y1, x1, renderBuffer->height);					// below rect
 }

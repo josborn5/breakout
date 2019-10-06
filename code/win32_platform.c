@@ -137,9 +137,8 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		POINT mousePointer;
 		GetCursorPos(&mousePointer);	// mousePointer in screen coord
 		ScreenToClient(window, &mousePointer);	// convert screen coord to window coord
-		int mouseY = renderBuffer.height - mousePointer.y;
-
-		input.mouse = TransformPixelCoordToGameCoord(&renderBuffer, mousePointer.x, mouseY);
+		input.mouse.x = mousePointer.x;
+		input.mouse.y = renderBuffer.height - mousePointer.y;
 
 		// simulation
 		SimulateGame(&input, renderBuffer, lastDt);
