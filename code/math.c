@@ -12,6 +12,11 @@ internal float ClampFloat(float min, float val, float max)
 	return val;
 }
 
+internal uint32_t MakeColorFromGrey(uint8_t grey)
+{
+	return (grey << 0) | (grey << 8) | (grey << 16);
+}
+
 // Vector 2d
 struct
 {

@@ -5,3 +5,5 @@ typedef int b32;
 
 #define global_variable static
 #define internal static
+
+#define ArrayCount(a) (sizeof(a) / sizeof(a[0]))
