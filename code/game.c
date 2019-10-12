@@ -1,4 +1,4 @@
-const float INIT_BALL_SPEED = -40.0f;
+const float INIT_BALL_SPEED = -50.0f;
 const float MAX_BALL_SPEED = 100.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -78,14 +78,24 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	playerPosition.x = TransformPixelCoordToGameCoord(&renderBuffer, input->mouse.x, input->mouse.y).x;
 	playerVelocity.x = (playerPosition.x - oldPlayerPositionX) / dt;
 
+	char debugStringBuffer[256];
+	sprintf_s(debugStringBuffer, 256, "dt %f \n", dt);
+	OutputDebugStringA(debugStringBuffer);
+
+	sprintf_s(debugStringBuffer, 256, "pos.x %f \n", playerPosition.x);
+	OutputDebugStringA(debugStringBuffer);
+
+	sprintf_s(debugStringBuffer, 256, "vel.x %f \n", playerVelocity.x);
+	OutputDebugStringA(debugStringBuffer);
+
 	// ball
 	ballPosition = AddVector2D(ballPosition, MultiplyVector2D(ballVelocity, dt));
 
 	// Check for collision between ball and bat
-	if (AABBCollideRectToRect(ballHalfSize, ballPosition, playerHalfSize, playerPosition))
+	if (ballVelocity.y < 0 && AABBCollideRectToRect(ballHalfSize, ballPosition, playerHalfSize, playerPosition))
 	{
 		ballVelocity.y *= -1.0f;
-		ballVelocity.x += (0.75f * playerVelocity.x);	// 0.75 is a smudge factor for inefficient transfer of momentum
+		ballVelocity.x += (0.25f * playerVelocity.x);	// Need to tune the multiplier here so mouse speed can control ball speed without just clipping to MAX_BALL_SPEED
 		// if mouse is moving crazy fast, ball will start moving crazy fast, so clamp to a maximum ball speed
 		ballVelocity.x = ClampFloat(-MAX_BALL_SPEED, ballVelocity.x, MAX_BALL_SPEED);
 	}
