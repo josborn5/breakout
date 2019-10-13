@@ -1,7 +1,8 @@
 struct
 {
 	b32 isDown;
-	b32 changed;
+	b32 wasDown;
+	b32 keyUp;
 } typedef Button;
 
 enum
@@ -10,6 +11,7 @@ enum
 	BUTTON_RIGHT,
 	BUTTON_UP,
 	BUTTON_DOWN,
+	BUTTON_PAUSE,
 
 	BUTTON_COUNT
 };
@@ -22,13 +24,13 @@ struct
 
 internal b32 IsPressed(Input *input, int button)
 {
-	b32 isPressed = input->buttons[button].isDown && input->buttons[button].changed;
+	b32 isPressed = input->buttons[button].isDown && input->buttons[button].wasDown;
 	return isPressed;
 }
 
 internal b32 IsReleased(Input *input, int button)
 {
-	b32 isReleased = !input->buttons[button].isDown && input->buttons[button].changed;
+	b32 isReleased = !input->buttons[button].isDown && input->buttons[button].wasDown;
 	return isReleased;
 }
 

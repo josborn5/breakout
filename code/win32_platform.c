@@ -74,7 +74,20 @@ internal void ProcessButton(int vkCode, b32 isDown, b32 wasDown, Button *button,
 	if (vkCode == vkButton)
 	{
 		button->isDown = isDown;
-		button->changed = (isDown != wasDown);
+		button->wasDown = wasDown;
+		button->keyUp = (!isDown && wasDown);
+	}
+}
+
+internal void ResetButtons(Input *input)
+{
+	for (int i = 0; i < BUTTON_COUNT; i += 1)
+	{
+		if (input->buttons[i].keyUp)
+		{
+			input->buttons[i].wasDown = false;
+			input->buttons[i].keyUp = false;
+		}
 	}
 }
 
@@ -115,13 +128,14 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 				case WM_KEYUP:
 				{
 					uint32_t vkCode = (uint32_t)message.wParam;
-					b32 wasDown = ((message.lParam & (1 << 30)) != 0);
-					b32 isDown = ((message.lParam & (1 << 31)) == 0);
+					b32 wasDown = ((message.lParam & (1 << 30)) != 0);	// message.lParam is 1 for KEYUP and 1 or 0 for KEYDOWN. i.e. 1 means was pressed, 0 means was not pressed
+					b32 isDown = ((message.lParam & (1 << 31)) == 0);	// message.lParam is always 0 for KEYDOWN & 1 for KEYUP. i.e. 0 means is pressed, 1 means is not pressed
 
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_LEFT], VK_LEFT);
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_RIGHT], VK_RIGHT);
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_UP], VK_UP);
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_DOWN], VK_DOWN);
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_PAUSE], VK_SPACE);
 
 					break;
 				}
@@ -143,6 +157,8 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 
 		// simulation
 		SimulateGame(&input, renderBuffer, lastDt);
+
+		ResetButtons(&input);
 
 		// render
 		StretchDIBits(hdc,
