@@ -1,12 +1,26 @@
-internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
+ internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
 {
-	Vector2D b0 = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
-	Vector2D b1 = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
-	Vector2D a0 = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
-	Vector2D a1 = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
-	b32 verticalCollision = (b0.y < a1.y && b1.y > a0.y);
-	b32 horizontalCollision = (b0.x < a1.x && b1.x > a0.x);
-	return verticalCollision && horizontalCollision;	
+	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
+	Vector2D bTopRight = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
+	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
+	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
+
+	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
+}
+
+ internal b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
+{
+	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
+	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
+
+	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
+}
+
+internal b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
+{
+	b32 verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
+	b32 horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
+	return verticalCollision && horizontalCollision;
 }
 
 internal b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
@@ -34,57 +48,51 @@ internal int CheckBlockAndBallCollision(Vector2D blockHalfSize, Vector2D blockP,
 	b32 isCollision = AABBCollideRectToRect(ballHalfSize, ballP1, blockHalfSize, blockP);
 	if (isCollision)
 	{
-		// work out if collision came form top / right / bottom / left side by checking for a line segment intersection
-		// between the path of travel of the ball and the perimeter of the block.
-
-		// Use the ball velocity to limit our check to two possible sides:
-		// if ballVelocity.y is positive, the collision can not be the top
-		// if ballVelocity.y is negative, the collision can not be the bottom
-		// if the ballVelcoity.x is positive, the collision cannot be the right side
-		// if the ballVelocity.y is negative, the collision cannot be the left side
-		if (ballVelocity.y >= 0) {
-			if (CollisionOnBrickBottom(blockHalfSize, blockP, ballP0, ballP1))
-			{
-				collisionResult = Bottom;
-			}
-			else
-			{
-				collisionResult = (ballVelocity.x >= 0) ? Left : Right;
-			}
+		if (CollisionOnBrickBottom(blockHalfSize, blockP, ballHalfSize, ballP0, ballP1))
+		{
+			collisionResult = Bottom;
+		}
+		else if (CollisionOnBrickTop(blockHalfSize, blockP, ballHalfSize, ballP0, ballP1))
+		{
+			collisionResult = Top;
 		}
 		else
 		{
-			if (CollisionOnBrickTop(blockHalfSize, blockP, ballP0, ballP1))
-			{
-				collisionResult = Top;
-			}
-			else
-			{
-				collisionResult = (ballVelocity.x >= 0) ? Left : Right;
-			}
+			collisionResult = Left;
 		}
 	}
 	
 	return collisionResult;
 }
 
-internal b32 CollisionOnBrickBottom(Vector2D blockHalfSize, Vector2D blockPosition, Vector2D ballP0, Vector2D ballP1)
+internal b32 CollisionOnBrickBottom(Vector2D blockHalfSize, Vector2D blockPosition, Vector2D ballHalfSize, Vector2D ballP0, Vector2D ballP1)
 {
 	Vector2D blockP0 = SubtractVector2D(blockPosition, blockHalfSize);	// Bottom left co-ords of block
 	Vector2D blockP1 = (Vector2D) { blockPosition.x + blockHalfSize.x, blockPosition.y - blockHalfSize.y
 	};	// Bottom right co-ords of block
 
-	b32 doesIntersect = DoLineSegmentsIntersect(ballP0, blockP0, ballP1, blockP1);
+	Vector2D ballTopLeftP0 = (Vector2D) { ballP0.x - ballHalfSize.x, ballP0.y + ballHalfSize.y };
+	Vector2D ballTopLeftP1 = (Vector2D) { ballP1.x - ballHalfSize.x, ballP1.y + ballHalfSize.y };
+	Vector2D ballTopRightP0 = (Vector2D) { ballP0.x + ballHalfSize.x, ballP0.y + ballHalfSize.y };
+	Vector2D ballTopRightP1 = (Vector2D) { ballP1.x + ballHalfSize.x, ballP1.y + ballHalfSize.y };
+	b32 doesIntersect = DoLineSegmentsIntersect(ballTopLeftP0, blockP0, ballTopLeftP1, blockP1)
+		|| DoLineSegmentsIntersect(ballTopRightP0, blockP0, ballTopRightP1, blockP1);
 
 	return doesIntersect;
 }
 
-internal b32 CollisionOnBrickTop(Vector2D blockHalfSize, Vector2D blockPosition, Vector2D ballP0, Vector2D ballP1)
+internal b32 CollisionOnBrickTop(Vector2D blockHalfSize, Vector2D blockPosition, Vector2D ballHalfSize, Vector2D ballP0, Vector2D ballP1)
 {
-	Vector2D blockP0 = (Vector2D) { blockPosition.y + blockHalfSize.y, blockPosition.x - blockHalfSize.x };	// Top left co-ords of block
+	Vector2D blockP0 = (Vector2D) { blockPosition.x - blockHalfSize.x, blockPosition.y + blockHalfSize.y };	// Top left co-ords of block
 	Vector2D blockP1 = AddVector2D(blockPosition, blockHalfSize);	// Top right co-ords of block
 
-	b32 doesIntersect = DoLineSegmentsIntersect(ballP0, blockP0, ballP1, blockP1);
+	Vector2D ballBottomLeftP0 = (Vector2D) { ballP0.x - ballHalfSize.x, ballP0.y - ballHalfSize.y };
+	Vector2D ballBottomLeftP1 = (Vector2D) { ballP1.x - ballHalfSize.x, ballP1.y - ballHalfSize.y };
+	Vector2D ballBottomRightP0 = (Vector2D) { ballP0.x + ballHalfSize.x, ballP0.y - ballHalfSize.y };
+	Vector2D ballBottomRightP1 = (Vector2D) { ballP1.x + ballHalfSize.x, ballP1.y - ballHalfSize.y };
+
+	b32 doesIntersect = DoLineSegmentsIntersect(ballBottomLeftP0, blockP0, ballBottomLeftP1, blockP1)
+		|| DoLineSegmentsIntersect(ballBottomRightP0, blockP0, ballBottomRightP1, blockP1);
 
 	return doesIntersect;
 }
