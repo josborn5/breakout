@@ -137,79 +137,38 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
 		Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
 
-		float minCollisitonT = dt;
-		int blockResult = None;
+		float minCollisionTime = dt;
+		int blockHitResult = None;
 		int blockHitIndex = -1;
 
 		// check for collision between ball and blocks
 		for (int i = 0; i < ArrayCount(blocks); i++)
 		// for (Block *block = blocks; block != blocks + ArrayCount(blocks); block++)
 		{
-			Block block = blocks[i];
-			if (!block.exists) continue;
+			Block *block = &blocks[i];
+			if (!block->exists) continue;
 
 			// Check if the block lies on the path the ball takes on the current timestep
 			// if(!AABBCollideCornerToRect(block->halfSize, block->position, ballPathTopRight, ballPathBottomLeft)) continue;
 
-			// Check for collision between block side and ball path
-			// 1. Top side
-			if (ballVelocity.y != 0)
+			b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &blockHitResult);
+			if (collided)
 			{
-				float yBlockTopSide = block.position.y - block.halfSize.y;
-				// Solve for time for when the ball path intersects with the y pos on the block (pBy)
-				// pBy = p0y + tD
-				// t = (pBy - p0y) / Dy
-				float tBlockTopSide = (yBlockTopSide - prevBallPosition.y) / ballVelocity.y;
-
-				if (tBlockTopSide > 0)
-				{
-					// Check the x co-ordinate of the collision is on the block
-					float posXCollision = prevBallPosition.x + (tBlockTopSide * ballVelocity.x);
-					float blockMinX = block.position.x - block.halfSize.x;
-					float blockMaxX = block.position.x + block.halfSize.x;
-					if (posXCollision > blockMinX && posXCollision < blockMaxX)
-					{
-						if (tBlockTopSide < minCollisitonT)
-						{
-							minCollisitonT = tBlockTopSide;
-							blockResult = Top;
-							blockHitIndex = i;
-						}
-					}
-				}
-
-				float yBlockBottomSide = block.position.y + block.halfSize.y;
-				float tBlockBottomSide = (yBlockBottomSide - prevBallPosition.y) / ballVelocity.y;
-				if (tBlockBottomSide > 0)
-				{
-					// Check the x co-ordinate of the collision is on the block
-					float posXCollision = prevBallPosition.x + (tBlockBottomSide * ballVelocity.x);
-					float blockMinX = block.position.x - block.halfSize.x;
-					float blockMaxX = block.position.x + block.halfSize.x;
-					if (posXCollision > blockMinX && posXCollision < blockMaxX)
-					{
-						if (tBlockBottomSide < minCollisitonT)
-						{
-							minCollisitonT = tBlockBottomSide;
-							blockResult = Bottom;
-							blockHitIndex = i;
-						}
-					}
-				}
+				blockHitIndex = i;
 			}
 		}
 
 
 		if (blockHitIndex != -1)
 		{
-			Block* block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
+			Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
 			// There was a collision, do something.
 			// sprintf_s(debugStringBuffer, 256, "collision %f \n", blockResult);
 			// OutputDebugStringA(debugStringBuffer);
 			if (testMode)
 			{
 				uint32_t collisionColor;
-				switch (blockResult)
+				switch (blockHitResult)
 				{
 					case Top:
 						collisionColor = 0xFF0000;
@@ -232,7 +191,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			else
 			{
 				block->exists = false;
-				if (blockResult == Top || blockResult == Bottom)
+				if (blockHitResult == Top || blockHitResult == Bottom)
 				{
 					ballVelocity.y *= -1.0f;
 				}
