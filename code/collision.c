@@ -28,11 +28,6 @@ internal b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float 
 	return ((aPos.x + aHalfSize.x) > horizontalPos && (aPos.x - aHalfSize.x) < horizontalPos);
 }
 
-internal b32 AABBCollideRectToHorizontal(Vector2D aHalfSize, Vector2D aPos, float verticalPos)
-{
-	return ((aPos.y + aHalfSize.y) > verticalPos && (aPos.y - aHalfSize.y) < verticalPos);
-}
-
 typedef enum BlockSide
 {
 	Top = 0,
@@ -41,6 +36,66 @@ typedef enum BlockSide
 	Left = 3,
 	None = 4
 } BlockSide;
+
+internal void CheckBlockAndUndersideOfWallCollision(float wallYPos, Vector2D ballHalfSize, Vector2D prevBallPosition, Vector2D ballVelocity, float *maxCollisionTime, int *blockResult)
+{
+	if (ballVelocity.y <= 0) return;
+
+	// Check for collision between ball and underside of wall
+	float yCollisionCheckPos = wallYPos - ballHalfSize.y;
+
+	float tYCollision = (yCollisionCheckPos - prevBallPosition.y) / ballVelocity.y;
+	if (tYCollision > 0 && tYCollision < *maxCollisionTime)
+	{
+		*maxCollisionTime = tYCollision;
+		*blockResult = Bottom;
+	}
+}
+
+internal void CheckBlockAndTopsideOfWallCollision(float wallYPos, Vector2D ballHalfSize, Vector2D prevBallPosition, Vector2D ballVelocity, float *maxCollisionTime, int *blockResult)
+{
+	if (ballVelocity.y >= 0) return;
+
+	// Check for collision between ball and topside of wall
+	float yCollisionCheckPos = wallYPos + ballHalfSize.y;
+
+	float tYCollision = (yCollisionCheckPos - prevBallPosition.y) / ballVelocity.y;
+	if (tYCollision > 0 && tYCollision < *maxCollisionTime)
+	{
+		*maxCollisionTime = tYCollision;
+		*blockResult = Top;
+	}
+}
+
+internal void CheckBlockAndLeftWallCollision(float wallXPos, Vector2D ballHalfSize, Vector2D prevBallPosition, Vector2D ballVelocity, float *maxCollisionTime, int *blockResult)
+{
+	if (ballVelocity.x >= 0) return;
+
+	// Check for collision between ball and left wall
+	float xCollisionCheckPos = wallXPos + ballHalfSize.x;
+
+	float tXCollision = (xCollisionCheckPos - prevBallPosition.x) / ballVelocity.x;
+	if (tXCollision > 0 && tXCollision < *maxCollisionTime)
+	{
+		*maxCollisionTime = tXCollision;
+		*blockResult = Right;
+	}
+}
+
+internal void CheckBlockAndRightWallCollision(float wallXPos, Vector2D ballHalfSize, Vector2D prevBallPosition, Vector2D ballVelocity, float *maxCollisionTime, int *blockResult)
+{
+	if (ballVelocity.x <= 0) return;
+
+	// Check for collision between ball and right wall
+	float xCollisionCheckPos = wallXPos - ballHalfSize.x;
+
+	float tXCollision = (xCollisionCheckPos - prevBallPosition.x) / ballVelocity.x;
+	if (tXCollision > 0 && tXCollision < *maxCollisionTime)
+	{
+		*maxCollisionTime = tXCollision;
+		*blockResult = Left;
+	}
+}
 
 internal b32 CheckBlockAndBallCollision(Vector2D blockHalfSize, Vector2D blockP, Vector2D ballHalfSize, Vector2D prevBallPosition, Vector2D ballVelocity, float *maxCollisionTime, int *blockResult)
 {
@@ -52,7 +107,6 @@ internal b32 CheckBlockAndBallCollision(Vector2D blockHalfSize, Vector2D blockP,
 
 	// Check for collision between block side and ball path
 	// 1. Top/bottom side
-	float tHorizontalCollision = -1.0f;
 	int horizontalCollisionResult = None;
 	float yCollisionCheckPos;
 	if (ballVelocity.y > 0)

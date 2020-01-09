@@ -36,7 +36,6 @@ int nextBlock;
 
 b32 initialized = false;
 b32 isPaused = false;
-b32 testMode = false;
 
 char debugStringBuffer[256];
 
@@ -46,7 +45,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	{
 		initialized = true;
 		ballVelocity.y = INIT_BALL_SPEED;
-		ballVelocity.x = 5;
+		ballVelocity.x = 20;
 
 		ballPosition.y = -10;
 		ballPosition.x = 0;
@@ -95,21 +94,9 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		prevBallPosition.y = ballPosition.y;
 
 		// ball
-		if (testMode)
-		{
-			// Move the ball with the mouse in test mode
-			ballPosition = TransformPixelCoordToGameCoord(&renderBuffer, input->mouse.x, input->mouse.y);
-			ballVelocity.x = (ballPosition.x - prevBallPosition.x) / dt;
-			ballVelocity.y = (ballPosition.y - prevBallPosition.y) / dt;
-		}
-		else
-		{
-			playerPosition.x = TransformPixelCoordToGameCoord(&renderBuffer, input->mouse.x, input->mouse.y).x;
-			playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
-			ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, dt));
-		}
-
-		
+		playerPosition.x = TransformPixelCoordToGameCoord(&renderBuffer, input->mouse.x, input->mouse.y).x;
+		playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
+		ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, dt));
 
 		// Check for collision between ball and bat
 		if (ballVelocity.y < 0 && AABBCollideRectToRect(ballHalfSize, ballPosition, playerHalfSize, playerPosition))
@@ -120,25 +107,19 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			// ballVelocity.x = ClampFloat(-MAX_BALL_SPEED, ballVelocity.x, MAX_BALL_SPEED);
 		}
 
-		// Check for collision between ball and vertical boundaries of world
-		if ((ballVelocity.x < 0 && AABBCollideRectToVertical(ballHalfSize, ballPosition, -X_DIM_BASE))
-			|| (ballVelocity.x > 0 && AABBCollideRectToVertical(ballHalfSize, ballPosition, X_DIM_BASE)))
-		{
-			ballVelocity.x = -1.0f * ballVelocity.x;
-		}
-
-		// Check for collision between ball and horizontal boundaries of world
-		if (ballVelocity.y > 0 && AABBCollideRectToHorizontal(ballHalfSize, ballPosition, Y_DIM_BASE))
-		{
-			ballVelocity.y = -1.0f * ballVelocity.y;
-		}
-
 		// Define a rect over the path the ball takes in the current timestep. Use this to work our which blocks could be collided with
 		Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
 		Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
 
 		float minCollisionTime = dt;
-		int blockHitResult = None;
+
+		int ballCollisionResult = None;
+		// Check for collision between any boudary of the world
+		CheckBlockAndTopsideOfWallCollision(-Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
+		CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
+		CheckBlockAndLeftWallCollision(-X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
+		CheckBlockAndRightWallCollision(X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
+
 		int blockHitIndex = -1;
 
 		// check for collision between ball and blocks
@@ -151,56 +132,30 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			// Check if the block lies on the path the ball takes on the current timestep
 			// if(!AABBCollideCornerToRect(block->halfSize, block->position, ballPathTopRight, ballPathBottomLeft)) continue;
 
-			b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &blockHitResult);
+			b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
 			if (collided)
 			{
 				blockHitIndex = i;
 			}
 		}
 
-
-		if (blockHitIndex != -1)
+		if (ballCollisionResult != None)
 		{
-			Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
-			// There was a collision, do something.
-			// sprintf_s(debugStringBuffer, 256, "collision %f \n", blockResult);
-			// OutputDebugStringA(debugStringBuffer);
-			if (testMode)
+			if (ballCollisionResult == Top || ballCollisionResult == Bottom)
 			{
-				uint32_t collisionColor;
-				switch (blockHitResult)
-				{
-					case Top:
-						collisionColor = 0xFF0000;
-						break;
-					case Bottom:
-						collisionColor = 0x00FF00;
-						break;
-					case Left:
-						collisionColor = 0x0000FF;
-						break;
-					case Right:
-						collisionColor = 0x000000;
-						break;
-					default:
-						collisionColor = 0xFFFFFF;
-						break;
-				}
-				block->color = collisionColor;
+				ballVelocity.y *= -1.0f;
 			}
 			else
 			{
-				block->exists = false;
-				if (blockHitResult == Top || blockHitResult == Bottom)
-				{
-					ballVelocity.y *= -1.0f;
-				}
-				else
-				{
-					ballVelocity.x *= -1.0f;
-				}
+				ballVelocity.x *= -1.0f;
 			}
-		}	
+
+			if (blockHitIndex != -1)
+			{
+				Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
+				block->exists = false;
+			}
+		}
 
 		// bat
 		ClearScreenAndDrawRect(&renderBuffer, BAT_COLOR, BACKGROUND_COLOR, playerHalfSize, playerPosition);
