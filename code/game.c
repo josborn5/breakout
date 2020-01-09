@@ -1,4 +1,4 @@
-const float INIT_BALL_SPEED = -75.0f;
+const float INIT_BALL_SPEED = -100.0f;
 const float MAX_BALL_SPEED = 150.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -98,15 +98,6 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
 		ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, dt));
 
-		// Check for collision between ball and bat
-		if (ballVelocity.y < 0 && AABBCollideRectToRect(ballHalfSize, ballPosition, playerHalfSize, playerPosition))
-		{
-			ballVelocity.y *= -1.0f;
-			// ballVelocity.x += (0.1f * playerVelocity.x);	// Need to tune the multiplier here so mouse speed can control ball speed without just clipping to MAX_BALL_SPEED
-			// if mouse is moving crazy fast, ball will start moving crazy fast, so clamp to a maximum ball speed
-			// ballVelocity.x = ClampFloat(-MAX_BALL_SPEED, ballVelocity.x, MAX_BALL_SPEED);
-		}
-
 		// Define a rect over the path the ball takes in the current timestep. Use this to work our which blocks could be collided with
 		Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
 		Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
@@ -114,7 +105,11 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		float minCollisionTime = dt;
 
 		int ballCollisionResult = None;
-		// Check for collision between any boudary of the world
+
+		// Check for collision between ball and bat
+		CheckBlockAndBallCollision(playerHalfSize, playerPosition, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
+
+		// Check for collision between any boundary of the world
 		CheckBlockAndTopsideOfWallCollision(-Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
 		CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
 		CheckBlockAndLeftWallCollision(-X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
