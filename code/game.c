@@ -1,4 +1,4 @@
-const float INIT_BALL_SPEED = -100.0f;
+const float INIT_BALL_SPEED = -50.0f;
 const float MAX_BALL_SPEED = 150.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -89,68 +89,81 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 
 	if (!isPaused)
 	{
-		// cache the previous position
-		prevBallPosition.x = ballPosition.x;
-		prevBallPosition.y = ballPosition.y;
-
 		// ball
 		playerPosition.x = TransformPixelCoordToGameCoord(&renderBuffer, input->mouse.x, input->mouse.y).x;
 		playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
-		ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, dt));
-
-		// Define a rect over the path the ball takes in the current timestep. Use this to work our which blocks could be collided with
-		Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
-		Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
 
 		float minCollisionTime = dt;
-
+		float t1 = dt;
+		float t0 = 0.0f;
 		int ballCollisionResult = None;
+		int collisionCheckCount = 0;
+		int maxCollisionCheckCount = 4;
+		b32 checkCollision = true;
 
-		// Check for collision between ball and bat
-		CheckBlockAndBallCollision(playerHalfSize, playerPosition, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-
-		// Check for collision between any boundary of the world
-		CheckBlockAndTopsideOfWallCollision(-Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-		CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-		CheckBlockAndLeftWallCollision(-X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-		CheckBlockAndRightWallCollision(X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-
-		int blockHitIndex = -1;
-
-		// check for collision between ball and blocks
-		for (int i = 0; i < ArrayCount(blocks); i++)
-		// for (Block *block = blocks; block != blocks + ArrayCount(blocks); block++)
+		while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
 		{
-			Block *block = &blocks[i];
-			if (!block->exists) continue;
+			// cache the previous position
+			prevBallPosition.x = ballPosition.x;
+			prevBallPosition.y = ballPosition.y;
+			
+			ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, t1 - t0));
 
-			// Check if the block lies on the path the ball takes on the current timestep
-			// if(!AABBCollideCornerToRect(block->halfSize, block->position, ballPathTopRight, ballPathBottomLeft)) continue;
+			// Define a rect over the path the ball takes in the current timestep. Use this to work our which blocks could be collided with
+			Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
+			Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
+			
+			// Check for collision between ball and bat
+			CheckBlockAndBallCollision(playerHalfSize, playerPosition, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
 
-			b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult);
-			if (collided)
+			// Check for collision between any boundary of the world
+			CheckBlockAndTopsideOfWallCollision(-Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			CheckBlockAndLeftWallCollision(-X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			CheckBlockAndRightWallCollision(X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+
+			int blockHitIndex = -1;
+
+			// check for collision between ball and blocks
+			for (int i = 0; i < ArrayCount(blocks); i++)
+			// for (Block *block = blocks; block != blocks + ArrayCount(blocks); block++)
 			{
-				blockHitIndex = i;
+				Block *block = &blocks[i];
+				if (!block->exists) continue;
+
+				// Check if the block lies on the path the ball takes on the current timestep
+				// if(!AABBCollideCornerToRect(block->halfSize, block->position, ballPathTopRight, ballPathBottomLeft)) continue;
+
+				b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+				if (collided)
+				{
+					blockHitIndex = i;
+				}
 			}
+
+			checkCollision = (ballCollisionResult != None);
+			if (checkCollision)
+			{
+				if (ballCollisionResult == Top || ballCollisionResult == Bottom)
+				{
+					ballVelocity.y *= -1.0f;
+				}
+				else
+				{
+					ballVelocity.x *= -1.0f;
+				}
+				t0 = minCollisionTime;		// Update t0 so next ball position calculation starts from the collision time
+				ballCollisionResult = None;	// Reset collision result for next loop
+
+				if (blockHitIndex != -1)
+				{
+					Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
+					block->exists = false;
+				}
+			}
+			collisionCheckCount += 1;
 		}
 
-		if (ballCollisionResult != None)
-		{
-			if (ballCollisionResult == Top || ballCollisionResult == Bottom)
-			{
-				ballVelocity.y *= -1.0f;
-			}
-			else
-			{
-				ballVelocity.x *= -1.0f;
-			}
-
-			if (blockHitIndex != -1)
-			{
-				Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
-				block->exists = false;
-			}
-		}
 
 		// bat
 		ClearScreenAndDrawRect(&renderBuffer, BAT_COLOR, BACKGROUND_COLOR, playerHalfSize, playerPosition);
