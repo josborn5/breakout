@@ -1,3 +1,5 @@
+#include "math.h"
+
 struct
 {
 	b32 isDown;

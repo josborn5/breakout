@@ -1,6 +1,4 @@
-internal const int X_DIM_BASE = 160;
-internal const int Y_DIM_BASE = 90;
-#define BASE_ASPECT_RATIO (X_DIM_BASE / Y_DIM_BASE)
+#include "math.h"
 
 internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 {
@@ -37,74 +35,21 @@ internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x
 	}
 }
 
-internal int TransformGamePositionToPixelPosition(int input, float offset, float factor)
-{
-	int transformed = (int)(offset + (factor * input));
-	return transformed;
-}
 
-internal void GetPixelAndGameDimensions(RenderBuffer* renderBuffer, int* smallestPixelDimension, int* smallestUnitDimension)
-{
-	float currentAspectRatio = (float)renderBuffer->width / (float)renderBuffer->height;
-
-	b32 factorToHeight = currentAspectRatio > BASE_ASPECT_RATIO;
-
-	*smallestPixelDimension = (factorToHeight) ? renderBuffer->height : renderBuffer->width;
-	*smallestUnitDimension = ((factorToHeight) ? Y_DIM_BASE : X_DIM_BASE ) * 2;
-}
-
-internal Vector2D TransformPixelCoordToGameCoord(RenderBuffer* renderBuffer, int x, int y)
-{
-	float horizontalOffset = 0.5f * (float)renderBuffer->width;
-	float verticalOffset = 0.5f * (float)renderBuffer->height;
-
-	int smallestPixelDimension;
-	int smallestUnitDimension;
-	GetPixelAndGameDimensions(renderBuffer, &smallestPixelDimension, &smallestUnitDimension);
-
-	float scaleFactor = (float)smallestUnitDimension / (float)smallestPixelDimension;
-
-	Vector2D transformed = {0};
-	transformed.x = (x - horizontalOffset) * scaleFactor;
-	transformed.y = (y - verticalOffset) * scaleFactor;
-
-	return transformed;
-}
-
-internal void TranformVectorsToPixels(RenderBuffer* renderBuffer, Vector2D halfSize, Vector2D p, int* x0, int* y0, int* x1, int* y1)
-{
-	float horizontalOffset = 0.5f * (float)renderBuffer->width;
-	float verticalOffset = 0.5f * (float)renderBuffer->height;
-
-	int smallestPixelDimension;
-	int smallestUnitDimension;
-	GetPixelAndGameDimensions(renderBuffer, &smallestPixelDimension, &smallestUnitDimension);
-
-	float scaleFactor = (float)smallestPixelDimension / (float)smallestUnitDimension;
-
-	int xU0 = (int)(p.x - halfSize.x);
-	int yU0 = (int)(p.y - halfSize.y);
-	int xU1 = (int)(p.x + halfSize.x);
-	int yU1 = (int)(p.y + halfSize.y);
-
-	*x0 = TransformGamePositionToPixelPosition(xU0, horizontalOffset, scaleFactor);
-	*y0 = TransformGamePositionToPixelPosition(yU0, verticalOffset, scaleFactor);
-	*x1 = TransformGamePositionToPixelPosition(xU1, horizontalOffset, scaleFactor);
-	*y1 = TransformGamePositionToPixelPosition(yU1, verticalOffset, scaleFactor);
-}
-
-internal void DrawRect(RenderBuffer* renderBuffer, uint32_t color, Vector2D halfSize, Vector2D p)
+internal void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	TranformVectorsToPixels(renderBuffer, halfSize, p, &x0, &y0, &x1, &y1);
+	Rect pixelRect = (Rect) { renderBuffer->width, renderBuffer->height };
+	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
 }
 
-internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
+internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	TranformVectorsToPixels(renderBuffer, halfSize, p, &x0, &y0, &x1, &y1);
+	Rect pixelRect = (Rect) { renderBuffer->width, renderBuffer->height };
+	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	// draw the given rectangle
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);

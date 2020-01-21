@@ -1,4 +1,6 @@
- internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
+#include "math.h"
+
+internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
 {
 	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
 	Vector2D bTopRight = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
@@ -215,4 +217,23 @@ internal b32 CheckBlockAndBallCollision(
 		}
 	}
 	return collided;
+}
+
+internal b32 CheckCollisionBetweenMovingObjects(
+	Vector2D aHalfSize,
+	Vector2D aPosition0,
+	Vector2D aVelocity,
+	Vector2D bHalfSize,
+	Vector2D bPosition0,
+	Vector2D bVelocity,
+	float *maxCollisionTime,
+	int *collisionResult,
+	Vector2D *bPosition1
+)
+{
+	// Calculate relative velocity as between a & b, as if a is static
+	Vector2D aRelBVelocity = SubtractVector2D(bVelocity, aVelocity);
+
+	b32 result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, aRelBVelocity, maxCollisionTime, collisionResult, bPosition1);
+	return result;
 }

@@ -18,4 +18,6 @@ del *.pdb > NUL 2> NUL
 
 cl -nologo -Zi -FC ..\%CODE_DIR%\win32_platform.c /link user32.lib gdi32.lib -incremental:no -opt:ref
 
+cl -nologo -Zi -FC ..\%CODE_DIR%\tests.c
+
 popd

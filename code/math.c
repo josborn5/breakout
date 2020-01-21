@@ -1,3 +1,5 @@
+#include "math.h"
+
 internal float MaxFloat(float val1, float val2)
 {
 	if (val1 > val2)
@@ -40,21 +42,6 @@ internal uint32_t MakeColorFromGrey(uint8_t grey)
 {
 	return (grey << 0) | (grey << 8) | (grey << 16);
 }
-
-// Vector 2d
-struct
-{
-	union
-	{
-		struct
-		{
-			float x;
-			float y;
-		};
-
-		float e[2];
-	};
-} typedef Vector2D;
 
 internal Vector2D AddVector2D(Vector2D a, Vector2D b)
 {
