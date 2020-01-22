@@ -72,8 +72,8 @@ Rect TransformGameCoordToPixelCoord(Rect pixelRect, Rect gameRect, float x, floa
 	float horizontalOffset = 0.0f;
 	float verticalOffset = 0.0f;
 	Rect transformed = {0};
-	transformed.x = (int)(x - horizontalOffset) * mX;
-	transformed.y = (int)(y - verticalOffset) * mY;
+	transformed.x = (int)((x - horizontalOffset) * mX);
+	transformed.y = (int)((y - verticalOffset) * mY);
 
 	return transformed;
 }
