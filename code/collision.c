@@ -1,6 +1,7 @@
+#include "utils.h"
 #include "math.h"
 
-internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
+static b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
 {
 	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
 	Vector2D bTopRight = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
@@ -10,7 +11,7 @@ internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D b
 	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
 }
 
- internal b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
+static b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
 {
 	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
 	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
@@ -18,14 +19,14 @@ internal b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D b
 	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
 }
 
-internal b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
+static b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
 {
 	b32 verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
 	b32 horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
 	return verticalCollision && horizontalCollision;
 }
 
-internal b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
+static b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
 {
 	return ((aPos.x + aHalfSize.x) > horizontalPos && (aPos.x - aHalfSize.x) < horizontalPos);
 }
@@ -39,7 +40,7 @@ typedef enum BlockSide
 	None = 4
 } BlockSide;
 
-internal void CheckBlockAndUndersideOfWallCollision(
+static void CheckBlockAndUndersideOfWallCollision(
 	float wallYPos,
 	Vector2D ballHalfSize,
 	Vector2D prevBallPosition,
@@ -64,7 +65,7 @@ internal void CheckBlockAndUndersideOfWallCollision(
 	}
 }
 
-internal void CheckBlockAndTopsideOfWallCollision(
+static void CheckBlockAndTopsideOfWallCollision(
 	float wallYPos,
 	Vector2D ballHalfSize,
 	Vector2D prevBallPosition,
@@ -89,7 +90,7 @@ internal void CheckBlockAndTopsideOfWallCollision(
 	}
 }
 
-internal void CheckBlockAndLeftWallCollision(
+static void CheckBlockAndLeftWallCollision(
 	float wallXPos,
 	Vector2D ballHalfSize,
 	Vector2D prevBallPosition,
@@ -114,7 +115,7 @@ internal void CheckBlockAndLeftWallCollision(
 	}
 }
 
-internal void CheckBlockAndRightWallCollision(
+static void CheckBlockAndRightWallCollision(
 	float wallXPos,
 	Vector2D ballHalfSize,
 	Vector2D prevBallPosition,
@@ -139,7 +140,7 @@ internal void CheckBlockAndRightWallCollision(
 	}
 }
 
-internal b32 CheckBlockAndBallCollision(
+static b32 CheckBlockAndBallCollision(
 	Vector2D blockHalfSize,
 	Vector2D blockP,
 	Vector2D ballHalfSize,
@@ -219,7 +220,7 @@ internal b32 CheckBlockAndBallCollision(
 	return collided;
 }
 
-internal b32 CheckCollisionBetweenMovingObjects(
+static b32 CheckCollisionBetweenMovingObjects(
 	Vector2D aHalfSize,
 	Vector2D aPosition0,
 	Vector2D aVelocity,

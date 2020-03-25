@@ -12,7 +12,7 @@ struct
 	BITMAPINFO bitmapInfo;
 } typedef RenderBuffer;
 
-#include "utils.c"	// this needs to be first as it defines some #defines used in the other *.c files
+#include "utils.h"	// this needs to be first as it defines some #defines used in the other *.c files
 #include "math.c"
 #include "collision.c"
 #include "world_transforms.c"

@@ -209,13 +209,17 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		// add some air resistance so ball slows down to normal speed after a while
 		if (ballVelocity.x > 0)
 		{
-			ballVelocity.x = MaxFloat(MIN_BALL_SPEED, ballVelocity.x *= 0.999);
+			ballVelocity.x = MaxFloat(MIN_BALL_SPEED, ballVelocity.x *= 0.995);
 		}
 		else if (ballVelocity.x < 0)
 		{
-			ballVelocity.x = MinFloat(-MIN_BALL_SPEED, ballVelocity.x *= 0.999);
+			ballVelocity.x = MinFloat(-MIN_BALL_SPEED, ballVelocity.x *= 0.995);
 		}
 	}
+
+	// final bounds check to makes ure ball doesn't leave the world
+	ballPosition.x = ClampFloat(0 + ballHalfSize.x, ballPosition.x, X_DIM_BASE - ballHalfSize.x);
+	ballPosition.y = ClampFloat(0 + ballHalfSize.y, ballPosition.y, Y_DIM_BASE - ballHalfSize.y);
 
 	// background
 	ClearScreenAndDrawRect(&renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
