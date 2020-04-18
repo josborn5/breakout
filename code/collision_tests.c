@@ -51,6 +51,8 @@ static void RunCheckCollisionBetweenMovingObjectsTests(Vector2D aVelocity, Vecto
 	assert(collisionTime == expectedCollisionTime);
 	assert(collisionResult == expectedCollisionResult);
 	assert(result == expectedCollision);
+	assert(bPosition1.x == expectedCollisionPosition.x);
+	assert(bPosition1.y == expectedCollisionPosition.y);
 }
 
 static void RunCollisionTests()
@@ -156,8 +158,60 @@ static void RunCollisionTests()
 	 */
 
 	// collision on x-axis: A--> <--B Right Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 2.0f, 0.0f }, (Vector2D){ 4.0f, 0.0f }, (Vector2D){ -2.0f, 0.0f }, 0.5f, Right);
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 2.0f, 0.0f }, (Vector2D){ 4.0f, 0.0f }, (Vector2D){ -2.0f, 0.0f }, 0.5f, Right, (Vector2D){ 3.0f, 0.0f });
 
 	// collision on x-axis: <-A <--B Right Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ -1.0f, 0.0f }, (Vector2D){ 4.0f, 0.0f }, (Vector2D){ -2.0f, 0.0f }, 2.0f, Right);
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ -1.0f, 0.0f }, (Vector2D){ 4.0f, 0.0f }, (Vector2D){ -2.0f, 0.0f }, 2.0f, Right, (Vector2D){ 0.0f, 0.0f });
+
+	// collision on x-axis: B--> <--A Left Hand Side collisions
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ -2.0f, 0.0f }, (Vector2D){ -4.0f, 0.0f }, (Vector2D){ 2.0f, 0.0f }, 0.5f, Left, (Vector2D){ -3.0f, 0.0f });
+
+	// collision on x-axis: B--> A-> Left Hand Side collisions
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 1.0f, 0.0f }, (Vector2D){ -4.0f, 0.0f }, (Vector2D){ 2.0f, 0.0f }, 2.0f, Left, (Vector2D){ 0.0f, 0.0f });
+
+	/* A	Bottom Side collisions
+	 * |
+	 * V
+	 *
+	 * Λ
+	 * |
+	 * B
+	 */
+	 // collision on y-axis
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, -2.0f }, (Vector2D){ 0.0f, -4.0f }, (Vector2D){ 0.0f, 2.0f }, 0.5f, Bottom, (Vector2D){ 0.0f, -3.0f });
+
+	/* Λ	Bottom Side collisions
+	 * |
+	 * A
+	 *
+	 * Λ
+	 * |
+	 * |
+	 * B
+	 */
+	 // collision on y-axis
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, 1.0f }, (Vector2D){ 0.0f, -4.0f }, (Vector2D){ 0.0f, 2.0f }, 2.0f, Bottom, (Vector2D){ 0.0f, 0.0f });
+
+	/* B	Top Side collisions
+	 * |
+	 * V
+	 *
+	 * Λ
+	 * |
+	 * A
+	 */
+	 // collision on y-axis
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, 2.0f }, (Vector2D){ 0.0f, 4.0f }, (Vector2D){ 0.0f, -2.0f }, 0.5f, Top, (Vector2D){ 0.0f, 3.0f });
+
+	/* B	Top Side collisions
+	 * |
+	 * |
+	 * V
+	 *
+	 * A
+	 * |
+	 * V
+	 */
+	 // collision on y-axis
+	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, -1.0f }, (Vector2D){ 0.0f, 4.0f }, (Vector2D){ 0.0f, -2.0f }, 2.0f, Top, (Vector2D){ 0.0f, 0.0f });
 }

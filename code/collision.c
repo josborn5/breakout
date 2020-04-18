@@ -233,9 +233,16 @@ static b32 CheckCollisionBetweenMovingObjects(
 	Vector2D *bPosition1
 )
 {
-	// Calculate relative velocity as between a & b, as if a is static
+	// Calculate relative velocity as between a & b, as if a is static. i.e. the origin of our co-ordinate system is fixed to whereever object 'a' is
 	Vector2D aRelBVelocity = SubtractVector2D(bVelocity, aVelocity);
 
 	b32 result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, aRelBVelocity, maxCollisionTime, collisionResult, bPosition1);
+
+	// Translate bPosition1 from the co-ordinate system whose origin is on 'a' back to the static co-ordinate system
+	if (result)
+	{
+		Vector2D deltaAPosition = MultiplyVector2D(aVelocity, *maxCollisionTime);
+		*bPosition1 = AddVector2D(deltaAPosition, *bPosition1);
+	}
 	return result;
 }
