@@ -111,7 +111,7 @@ static void CheckBlockAndLeftWallCollision(
 		*maxCollisionTime = tCollision;
 		*blockResult = Right;
 		float yCollisionPos = prevBallPosition.y + (tCollision * ballVelocity.y);
-		*ballPosition = (Vector2D) {xCollisionCheckPos, yCollisionPos};
+		*ballPosition = (Vector2D) { xCollisionCheckPos, yCollisionPos };
 	}
 }
 
@@ -183,7 +183,7 @@ static b32 CheckBlockAndBallCollision(
 				*maxCollisionTime = tYCollision;
 				*blockResult = horizontalCollisionResult;
 				collided = true;
-				*ballPosition = (Vector2D) {ballXPosAtCollision, yCollisionCheckPos};
+				*ballPosition = (Vector2D) { ballXPosAtCollision, yCollisionCheckPos };
 			}
 		}
 	}
@@ -214,6 +214,7 @@ static b32 CheckBlockAndBallCollision(
 				*maxCollisionTime = tXCollision;
 				*blockResult = verticalCollisionResult;
 				collided = true;
+				*ballPosition = (Vector2D) { xCollisionCheckPos, ballYPosAtCollision };
 			}
 		}
 	}
