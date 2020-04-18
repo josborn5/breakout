@@ -1,7 +1,6 @@
 #include "math.h"
 
 const float INIT_BALL_SPEED = 100.0f;
-const float MAX_BALL_SPEED = 1000.0f;
 const float MIN_BALL_SPEED = 50.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -179,17 +178,18 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 				{
 					if (playerCollision)
 					{
-						if (ballVelocity.x > 0 && playerVelocity.x > 0
-							|| ballVelocity.x < 0 && playerVelocity.x < 0)
+						if (ballCollisionResult == Left)
 						{
-							ballVelocity.x = MaxFloat(playerVelocity.x, ballVelocity.x);
+							float ballVelocityX = (ballVelocity.x > 0) ? -ballVelocity.x : ballVelocity.x;
+							ballVelocity.x = MinFloat(ballVelocityX, playerVelocity.x);
 						}
 						else
 						{
-							ballVelocity.x *= -1.0f;
+							float ballVelocityX = (ballVelocity.x < 0) ? -ballVelocity.x : ballVelocity.x;
+							ballVelocity.x = MaxFloat(ballVelocityX, playerVelocity.x);
 						}
 					}
-					else
+					else // collision with block
 					{
 						ballVelocity.x *= -1.0f;
 					}
