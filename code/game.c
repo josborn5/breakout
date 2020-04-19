@@ -2,6 +2,7 @@
 
 const float INIT_BALL_SPEED = 100.0f;
 const float MIN_BALL_SPEED = 50.0f;
+const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
 const uint32_t BALL_COLOR = 0x0000FF;
@@ -11,7 +12,7 @@ const uint32_t BLOCK_COLOR = 0xFFFF00;
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
 
-const float BALL_SIZE = 2.0f;
+const float BALL_SIZE = 1.5f;
 
 const float BAT_WIDTH = 10.0f;
 const float BAT_HEIGHT = 1.0f;
@@ -49,11 +50,50 @@ int nextBlock;
 
 b32 initialized = false;
 b32 isPaused = false;
+b32 allBlocksCleared = false;;
+char level;
 
 char debugStringBuffer[256];
 
+static void StartLevel(char newLevel)
+{
+	level = newLevel;
+	allBlocksCleared = false;
+	ballVelocity.y = 50;
+	ballVelocity.x = 5;
+
+	ballPosition.y = 20 + ballHalfSize.y;
+	ballPosition.x = 20 + ballHalfSize.x;
+
+	const int BLOCK_ROW_COUNT = 2;
+	const int BLOCK_COL_COUNT = 8;
+	for (int y = 0; y < BLOCK_ROW_COUNT; y += 1)
+	{
+		for (int x = 0; x < BLOCK_COL_COUNT; x += 1)
+		{
+			Block *block = blocks + nextBlock;
+			nextBlock++;
+			if (nextBlock >= ArrayCount(blocks))
+			{
+				nextBlock = 0;
+			}
+			block->exists = 1;
+			block->halfSize.x = BLOCK_WIDTH;
+			block->halfSize.y = BLOCK_HEIGHT;
+			block->position.x = 30 + (2 * x * BLOCK_WIDTH);
+			block->position.y = 60 + (2 * y * BLOCK_HEIGHT);
+			block->color = MakeColorFromGrey((x + y) * 20);
+		}
+	}
+}
+
 internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 {
+	if (IsReleased(input, BUTTON_RESET))
+	{
+		initialized = false;
+	}
+
 	Rect pixelRect = (Rect) { renderBuffer.width, renderBuffer.height };
 	if (!initialized)
 	{
@@ -63,12 +103,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		float worldHalfY = 0.5f * (float)Y_DIM_BASE;
 		worldHalfSize = (Vector2D){ worldHalfX, worldHalfY };
 		worldPosition = (Vector2D){ worldHalfX, worldHalfY };
-		ballVelocity.y = 50;
-		ballVelocity.x = 5;
-
-		ballPosition.y = 20 + ballHalfSize.y;
-		ballPosition.x = 20 + ballHalfSize.x;
-
+		
 		ballHalfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
 
 		minPlayerX = playerHalfSize.x;
@@ -83,27 +118,13 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		playerVelocity.x = 0;
 		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
-		const int BLOCK_ROW_COUNT = 2;
-		const int BLOCK_COL_COUNT = 8;
-		for (int y = 0; y < BLOCK_ROW_COUNT; y += 1)
-		{
-			for (int x = 0; x < BLOCK_COL_COUNT; x += 1)
-			{
-				Block *block = blocks + nextBlock;
-				nextBlock++;
-				if (nextBlock >= ArrayCount(blocks))
-				{
-					nextBlock = 0;
-				}
-				block->exists = 1;
-				block->halfSize.x = BLOCK_WIDTH;
-				block->halfSize.y = BLOCK_HEIGHT;
-				block->position.x = 30 + (2 * x * BLOCK_WIDTH);
-				block->position.y = 60 + (2 * y * BLOCK_HEIGHT);
-				block->color = MakeColorFromGrey((x + y) * 20);
-			}
-		}
+		StartLevel(1);
 		return;
+	}
+
+	if (allBlocksCleared && ((ballVelocity.x * ballVelocity.x) < LEVEL_CHANGE_BALL_SPEED) && ((ballVelocity.y * ballVelocity.y) < LEVEL_CHANGE_BALL_SPEED))
+	{
+		StartLevel(level += 1);
 	}
 
 	if (IsReleased(input, BUTTON_PAUSE))
@@ -206,20 +227,29 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			collisionCheckCount += 1;
 		}
 
+		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
 		// add some air resistance so ball slows down to normal speed after a while
 		if (ballVelocity.x > 0)
 		{
-			ballVelocity.x = MaxFloat(MIN_BALL_SPEED, ballVelocity.x *= 0.995);
+			ballVelocity.x = MaxFloat(minBallSpeed, ballVelocity.x *= 0.995);
 		}
 		else if (ballVelocity.x < 0)
 		{
-			ballVelocity.x = MinFloat(-MIN_BALL_SPEED, ballVelocity.x *= 0.995);
+			ballVelocity.x = MinFloat(-minBallSpeed, ballVelocity.x *= 0.995);
 		}
-	}
+		if (ballVelocity.y > 0)
+		{
+			ballVelocity.y = MaxFloat(minBallSpeed, ballVelocity.y *= 0.995);
+		}
+		else if (ballVelocity.y < 0)
+		{
+			ballVelocity.y = MinFloat(-minBallSpeed, ballVelocity.y *= 0.995);
+		}
 
-	// final bounds check to makes ure ball doesn't leave the world
-	ballPosition.x = ClampFloat(0 + ballHalfSize.x, ballPosition.x, X_DIM_BASE - ballHalfSize.x);
-	ballPosition.y = ClampFloat(0 + ballHalfSize.y, ballPosition.y, Y_DIM_BASE - ballHalfSize.y);
+		// final bounds check to makes ure ball doesn't leave the world
+		ballPosition.x = ClampFloat(0 + ballHalfSize.x, ballPosition.x, X_DIM_BASE - ballHalfSize.x);
+		ballPosition.y = ClampFloat(0 + ballHalfSize.y, ballPosition.y, Y_DIM_BASE - ballHalfSize.y);
+	}
 
 	// background
 	ClearScreenAndDrawRect(&renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
@@ -228,10 +258,12 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	DrawRect(&renderBuffer, GAME_RECT, BAT_COLOR, playerHalfSize, playerPosition);
 
 	// blocks
+	allBlocksCleared = true;
 	for (Block *block = blocks; block != blocks + ArrayCount(blocks); block++)
 	{
 		if (!block->exists) continue;
 
+		allBlocksCleared = false;
 		DrawRect(&renderBuffer, GAME_RECT, block->color, block->halfSize, block->position);
 	}
 

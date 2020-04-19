@@ -57,6 +57,6 @@ internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, 
 	// draw rectangles around the given rectangle to clear the background
 	DrawRectInPixels(renderBuffer, clearColor, 0, 0, x0, renderBuffer->height);						// left of rect
 	DrawRectInPixels(renderBuffer, clearColor, x1, 0, renderBuffer->width, renderBuffer->height);	// right of rect
-	DrawRectInPixels(renderBuffer, clearColor, x0, 0, x1, y0);									// above rect
+	DrawRectInPixels(renderBuffer, clearColor, x0, 0, x1, y0);										// above rect
 	DrawRectInPixels(renderBuffer, clearColor, x0, y1, x1, renderBuffer->height);					// below rect
 }

@@ -101,7 +101,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 
 	RegisterClassA(&windowClass);
 
-	HWND window = CreateWindowExA(0, windowClass.lpszClassName, "Super Smashing Great",
+	HWND window = CreateWindowExA(0, windowClass.lpszClassName, "Breakout Clone",
 									WS_VISIBLE|WS_OVERLAPPEDWINDOW,
 									CW_USEDEFAULT, CW_USEDEFAULT,
 									1280, 720, 0, 0, 0, 0);
@@ -137,6 +137,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_UP], VK_UP);
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_DOWN], VK_DOWN);
 					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_PAUSE], VK_SPACE);
+					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_RESET], 0x52); // 'R' key
 
 					break;
 				}
