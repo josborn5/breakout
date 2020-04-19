@@ -105,6 +105,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		worldPosition = (Vector2D){ worldHalfX, worldHalfY };
 		
 		ballHalfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
+		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 		minPlayerX = playerHalfSize.x;
 		maxPlayerX = X_DIM_BASE - playerHalfSize.x;
@@ -116,7 +117,6 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		prevPlayerPosition.y = playerPosition.y;
 		playerVelocity.y = 0;
 		playerVelocity.x = 0;
-		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 		StartLevel(1);
 		return;
@@ -137,7 +137,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		// ball
 		prevPlayerPosition.x = playerPosition.x;
 		playerPosition.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
-		playerPosition.x = ClampFloat(0, playerPosition.x, X_DIM_BASE);
+		playerPosition.x = ClampFloat(minPlayerX, playerPosition.x, maxPlayerX);
 		playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
 
 		float minCollisionTime = dt;
