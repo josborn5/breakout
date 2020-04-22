@@ -60,3 +60,404 @@ internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, 
 	DrawRectInPixels(renderBuffer, clearColor, x0, 0, x1, y0);										// above rect
 	DrawRectInPixels(renderBuffer, clearColor, x0, y1, x1, renderBuffer->height);					// below rect
 }
+
+static void DrawSprite(RenderBuffer* renderBuffer, Rect gameRect, char *sprite, Vector2D p, float blockHalfSize, uint32_t color)
+{
+	float originalX = p.x;
+	float originalY = p.y;
+
+	float blockSize = blockHalfSize * 2.0f;
+	Vector2D blockHalf = (Vector2D){ blockSize, blockSize };
+
+	while (*sprite)
+	{
+		if (*sprite == '\n')
+		{
+			p.y -= blockSize;	// We're populating blocks in the sprint left to right, top to bottom. So y is decreasing.
+			p.x = originalX; // reset cursor to start of next row
+		}
+		else
+		{
+			if (*sprite != ' ')
+			{
+				DrawRect(renderBuffer, gameRect, color, blockHalf, p);
+			}
+			p.x += blockSize;
+		}
+		sprite++;
+	}
+
+	p.x = originalX;
+	p.y = originalY;
+}
+
+// Render characters
+const float CHARACTER_HEIGHT = 7.0f;
+char *letters[26] = {
+"\
+ 00\n\
+0  0\n\
+0  0\n\
+0000\n\
+0  0\n\
+0  0\n\
+0  0",
+
+"\
+000\n\
+0  0\n\
+0  0\n\
+000\n\
+0  0\n\
+0  0\n\
+000",
+
+"\
+ 000\n\
+0\n\
+0\n\
+0\n\
+0\n\
+0\n\
+ 000",
+
+"\
+000\n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+000",
+
+"\
+0000\n\
+0\n\
+0\n\
+000\n\
+0\n\
+0\n\
+0000",
+
+"\
+0000\n\
+0\n\
+0\n\
+000\n\
+0\n\
+0\n\
+0",
+
+"\
+ 000\n\
+0\n\
+0\n\
+0 00\n\
+0  0\n\
+0  0\n\
+ 000",
+
+"\
+0  0\n\
+0  0\n\
+0  0\n\
+0000\n\
+0  0\n\
+0  0\n\
+0  0",
+
+"\
+000\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0\n\
+000",
+
+"\
+ 000\n\
+   0\n\
+   0\n\
+   0\n\
+0  0\n\
+0  0\n\
+ 000",
+
+"\
+0  0\n\
+0  0\n\
+0 0\n\
+00\n\
+0 0\n\
+0  0\n\
+0  0",
+
+"\
+0\n\
+0\n\
+0\n\
+0\n\
+0\n\
+0\n\
+0000",
+
+"\
+00 00\n\
+0 0 0\n\
+0 0 0\n\
+0   0\n\
+0   0\n\
+0   0\n\
+0   0",
+
+"\
+0   0\n\
+00  0\n\
+0 0 0\n\
+0 0 0\n\
+0 0 0\n\
+0  00\n\
+0   0",
+
+"\
+ 00 \n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+ 00",
+
+"\
+000\n\
+0  0\n\
+0  0\n\
+000\n\
+0\n\
+0\n\
+0",
+
+"\
+ 000\n\
+0   0\n\
+0   0\n\
+0   0\n\
+0 0 0\n\
+0  0\n\
+ 00 0",
+
+"\
+000\n\
+0  0\n\
+0  0\n\
+000\n\
+0  0\n\
+0  0\n\
+0  0",
+
+"\
+ 000\n\
+0\n\
+0\n\
+ 00\n\
+   0\n\
+   0\n\
+000",
+
+"\
+000\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0",
+
+"\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+0  0\n\
+ 00",
+
+"\
+0   0\n\
+0   0\n\
+0   0\n\
+ 0 0\n\
+ 0 0\n\
+  0\n\
+  0",
+
+"\
+0   0\n\
+0   0\n\
+0   0\n\
+0 0 0\n\
+0 0 0\n\
+ 0 0\n\
+ 0 0",
+
+"\
+0   0\n\
+0   0\n\
+ 0 0\n\
+  0\n\
+ 0 0\n\
+0   0\n\
+0   0",
+
+"\
+0   0\n\
+0   0\n\
+ 0 0\n\
+ 0 0\n\
+  0\n\
+  0\n\
+  0",
+
+"\
+0000\n\
+   0\n\
+  0\n\
+ 0\n\
+0\n\
+0\n\
+0000"
+};
+
+char *digits[10] = {
+"\
+ 000 \n\
+0   0\n\
+0  00\n\
+0 0 0\n\
+00  0\n\
+0   0\n\
+ 000",
+
+"\
+ 0\n\
+00\n\
+ 0\n\
+ 0\n\
+ 0\n\
+ 0\n\
+000",
+
+"\
+ 00\n\
+0  0\n\
+   0\n\
+  0\n\
+ 0\n\
+0\n\
+0000",
+
+"\
+ 00\n\
+0  0\n\
+   0\n\
+ 00\n\
+   0\n\
+0  0\n\
+ 00",
+
+"\
+ 00\n\
+ 0 0\n\
+0  0\n\
+0000\n\
+   0\n\
+   0\n\
+   0",
+
+"\
+0000\n\
+0\n\
+0\n\
+000\n\
+   0\n\
+   0\n\
+000",
+
+"\
+ 000\n\
+0\n\
+0\n\
+000\n\
+0  0\n\
+0  0\n\
+ 00",
+
+"\
+0000\n\
+   0\n\
+   0\n\
+  0\n\
+ 0\n\
+0\n\
+0",
+
+"\
+ 00\n\
+0  0\n\
+0  0\n\
+ 00\n\
+0  0\n\
+0  0\n\
+ 00",
+
+"\
+ 00\n\
+0  0\n\
+0  0\n\
+ 00\n\
+  0\n\
+ 0\n\
+0"
+};
+
+int GetLetterIndex(char c)
+{
+	return c - 'A';
+}
+
+static void DrawAlphabetCharacters(RenderBuffer* renderBuffer, Rect gameRect, char *text, Vector2D p, float fontSize, uint32_t color)
+{
+	float blockHalfSize = fontSize / (2.0f * CHARACTER_HEIGHT);
+	float characterWidth = fontSize;
+	float originalX = p.x;
+	
+	for (char *letterAt = text; *letterAt; letterAt++)
+	{
+		if (*letterAt != ' ')
+		{
+			int letterIndex = GetLetterIndex(*letterAt);
+			char *letter = letters[letterIndex];
+
+			DrawSprite(renderBuffer, gameRect, letter, p, blockHalfSize, color);
+		}
+		p.x += characterWidth;
+	}
+
+	p.x = originalX;
+}
+
+static void DrawNumber(RenderBuffer* renderBuffer, Rect gameRect, int number, Vector2D p, float fontSize, uint32_t color)
+{
+	float blockHalfSize = fontSize / (2.0f * CHARACTER_HEIGHT);
+	float characterWidth = fontSize;
+	float originalX = p.x;
+
+	if (number <= 9 && number >= 0)
+	{
+		char *digit = digits[number];
+		DrawSprite(renderBuffer, gameRect, digit, p, blockHalfSize, color);
+	}
+
+	p.x = originalX;
+}

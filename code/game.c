@@ -8,6 +8,7 @@ const uint32_t BACKGROUND_COLOR = 0x551100;
 const uint32_t BALL_COLOR = 0x0000FF;
 const uint32_t BAT_COLOR = 0x00FF00;
 const uint32_t BLOCK_COLOR = 0xFFFF00;
+const uint32_t TEXT_COLOR = 0x000000;
 
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
@@ -51,7 +52,7 @@ int nextBlock;
 b32 initialized = false;
 b32 isPaused = false;
 b32 allBlocksCleared = false;;
-char level;
+int level;
 
 char debugStringBuffer[256];
 
@@ -269,4 +270,8 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 
 	// ball
 	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, ballHalfSize, ballPosition);
+
+	// Level
+	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "LEVEL", (Vector2D){ 10.0f, 10.0f}, 2.0f, TEXT_COLOR);
+	DrawNumber(&renderBuffer, GAME_RECT, 10, (Vector2D){ 25.0f, 10.0f}, 2.0f, TEXT_COLOR);
 }
