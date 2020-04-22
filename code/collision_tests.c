@@ -81,6 +81,13 @@ static void RunCollisionTests()
 	// No Collision on x axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ 4.0f, 2.000001f }, (Vector2D){ -2.0f, 0.0f }, originalCollisionTime, None, (Vector2D){ 4.0f, 2.000001f });
 
+	// Collision when already touching and moving toward each other
+	RunCheckCollisionBlockAndBallTests((Vector2D) { 2.0f, 0.0f }, (Vector2D) { -2.0f, 0.0f }, 0.0f, Right, (Vector2D) { -2.0f, 0.0f });
+
+	// No collision when already touching and moving away from each other
+	RunCheckCollisionBlockAndBallTests((Vector2D) { 2.0f, 0.0f }, (Vector2D) { 2.0f, 0.0f }, originalCollisionTime, None, (Vector2D) { -2.0f, 0.0f });
+
+
 	/* <--B--> A Left Hand Side collisions */
 	// collision on x-axis
 	RunCheckCollisionBlockAndBallTests((Vector2D){ -4.0f, 0.0f }, (Vector2D){ 2.0f, 0.0f }, 1, Left, (Vector2D){ -2.0f, 0.0f });
@@ -99,6 +106,12 @@ static void RunCollisionTests()
 
 	// No Collision on x axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ -4.0f, 2.000001f }, (Vector2D){ 2.0f, 0.0f }, originalCollisionTime, None, (Vector2D){ -4.0f, 2.000001f });
+
+	// Collision when already touching and moving toward each other
+	RunCheckCollisionBlockAndBallTests((Vector2D){ -2.0f, 0.0f }, (Vector2D){ 2.0f, 0.0f }, 0.0f, Left, (Vector2D){ -2.0f, 0.0f });
+
+	// No collision when already touching and moving away from each other
+	RunCheckCollisionBlockAndBallTests((Vector2D) { -2.0f, 0.0f }, (Vector2D) { -2.0f, 0.0f }, originalCollisionTime, None, (Vector2D) { -2.0f, 0.0f });
 
 	/* A	Bottom Side collisions
 	 *
@@ -126,6 +139,12 @@ static void RunCollisionTests()
 	// No Collision on y axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.000001f, -4.0f }, (Vector2D){ 0.0f, 2.0f }, originalCollisionTime, None, (Vector2D){ 2.000001f, -4.0f });
 
+	// Collision when already touching and moving toward each other
+	RunCheckCollisionBlockAndBallTests((Vector2D){ 0.0f, -2.0f }, (Vector2D){ 2.0f, 0.0f }, 0.0f, Bottom, (Vector2D){ 0.0f, -2.0f });
+
+	// No collision when already touching and moving away from each other
+	RunCheckCollisionBlockAndBallTests((Vector2D) { 0.0f, -2.0f }, (Vector2D) { -2.0f, 0.0f }, originalCollisionTime, None, (Vector2D) { 0.0f, -2.0f });
+
 	/* Λ	Top Side collisions
 	 * |
 	 * B
@@ -151,6 +170,12 @@ static void RunCollisionTests()
 
 	// No Collision on y axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.000001f, 4.0f }, (Vector2D){ 0.0f, -2.0f }, originalCollisionTime, None, (Vector2D){ 2.000001f, 4.0f });
+
+	// Collision when already touching and moving toward each other
+	RunCheckCollisionBlockAndBallTests((Vector2D){ 0.0f, -2.0f }, (Vector2D){ 2.0f, 0.0f }, 0.0f, Bottom, (Vector2D){ 0.0f, -2.0f });
+
+	// No collision when already touching and moving away from each other
+	RunCheckCollisionBlockAndBallTests((Vector2D) { 0.0f, -2.0f }, (Vector2D) { -2.0f, 0.0f }, originalCollisionTime, None, (Vector2D) { 0.0f, -2.0f });
 
 	/*
 	 * CheckCollisionBetweenMovingObjects
