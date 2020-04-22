@@ -8,10 +8,12 @@ const uint32_t BACKGROUND_COLOR = 0x551100;
 const uint32_t BALL_COLOR = 0x0000FF;
 const uint32_t BAT_COLOR = 0x00FF00;
 const uint32_t BLOCK_COLOR = 0xFFFF00;
-const uint32_t TEXT_COLOR = 0x000000;
+const uint32_t TEXT_COLOR = 0xFFFF00;
 
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
+
+const int BLOCK_SCORE = 10;
 
 const float BALL_SIZE = 1.5f;
 
@@ -53,6 +55,7 @@ b32 initialized = false;
 b32 isPaused = false;
 b32 allBlocksCleared = false;;
 int level;
+int score;
 
 char debugStringBuffer[256];
 
@@ -119,6 +122,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		playerVelocity.y = 0;
 		playerVelocity.x = 0;
 
+		score = 0;
 		StartLevel(1);
 		return;
 	}
@@ -223,6 +227,7 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 				{
 					Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
 					block->exists = false;
+					score += BLOCK_SCORE;
 				}
 			}
 			collisionCheckCount += 1;
@@ -271,7 +276,10 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	// ball
 	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, ballHalfSize, ballPosition);
 
-	// Level
+	// Level & Score
 	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "LEVEL", (Vector2D){ 10.0f, 10.0f}, 2.0f, TEXT_COLOR);
-	DrawNumber(&renderBuffer, GAME_RECT, 10, (Vector2D){ 25.0f, 10.0f}, 2.0f, TEXT_COLOR);
+	DrawNumber(&renderBuffer, GAME_RECT, level, (Vector2D){ 25.0f, 10.0f}, 2.0f, TEXT_COLOR);
+
+	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "SCORE", (Vector2D){ 80.0f, 10.0f}, 2.0f, TEXT_COLOR);
+	DrawNumber(&renderBuffer, GAME_RECT, score, (Vector2D){ 95.0f, 10.0f}, 2.0f, TEXT_COLOR);
 }

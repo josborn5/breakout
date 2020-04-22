@@ -453,10 +453,28 @@ static void DrawNumber(RenderBuffer* renderBuffer, Rect gameRect, int number, Ve
 	float characterWidth = fontSize;
 	float originalX = p.x;
 
-	if (number <= 9 && number >= 0)
+	int baseTenMultiplier = 1;
+	int digit = number / baseTenMultiplier;
+	int digitCount = 1;
+	while (digit > 0)
 	{
-		char *digit = digits[number];
-		DrawSprite(renderBuffer, gameRect, digit, p, blockHalfSize, color);
+		baseTenMultiplier *= 10;
+		digitCount += 1;
+		digit = number / baseTenMultiplier;
+	}
+
+	int workingNumber = number;
+	while (baseTenMultiplier >= 10)
+	{
+		baseTenMultiplier /= 10;
+		digit = workingNumber / baseTenMultiplier;
+
+		workingNumber -= (digit * baseTenMultiplier);
+
+		char *charDigit = digits[digit];
+		DrawSprite(renderBuffer, gameRect, charDigit, p, blockHalfSize, color);
+
+		p.x += characterWidth;
 	}
 
 	p.x = originalX;
