@@ -81,7 +81,7 @@ static void CheckBlockAndTopsideOfWallCollision(
 	float yCollisionCheckPos = wallYPos + ballHalfSize.y;
 
 	float tCollision = (yCollisionCheckPos - prevBallPosition.y) / ballVelocity.y;
-	if (tCollision > 0 && tCollision < *maxCollisionTime)
+	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
 		*blockResult = Top;
@@ -106,7 +106,7 @@ static void CheckBlockAndLeftWallCollision(
 	float xCollisionCheckPos = wallXPos + ballHalfSize.x;
 
 	float tCollision = (xCollisionCheckPos - prevBallPosition.x) / ballVelocity.x;
-	if (tCollision > 0 && tCollision < *maxCollisionTime)
+	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
 		*blockResult = Right;
@@ -131,7 +131,7 @@ static void CheckBlockAndRightWallCollision(
 	float xCollisionCheckPos = wallXPos - ballHalfSize.x;
 
 	float tCollision = (xCollisionCheckPos - prevBallPosition.x) / ballVelocity.x;
-	if (tCollision > 0 && tCollision < *maxCollisionTime)
+	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
 		*blockResult = Left;
@@ -175,7 +175,7 @@ static b32 CheckBlockAndBallCollision(
 	if (ballVelocity.y != 0)
 	{
 		float tYCollision = (yCollisionCheckPos - prevBallPosition.y) / ballVelocity.y;
-		if (tYCollision > 0)
+		if (tYCollision >= 0)
 		{
 			float ballXPosAtCollision = prevBallPosition.x + (tYCollision * ballVelocity.x);
 			if (ballXPosAtCollision >= blockLeftSide && ballXPosAtCollision <= blockRightSide && tYCollision < *maxCollisionTime)
@@ -206,7 +206,7 @@ static b32 CheckBlockAndBallCollision(
 	if (ballVelocity.x != 0)
 	{
 		float tXCollision = (xCollisionCheckPos - prevBallPosition.x) / ballVelocity.x;
-		if (tXCollision > 0)
+		if (tXCollision >= 0)
 		{
 			float ballYPosAtCollision = prevBallPosition.y + (tXCollision * ballVelocity.y);
 			if (ballYPosAtCollision >= blockBottomSide && ballYPosAtCollision <= blockTopSide && tXCollision < *maxCollisionTime)
