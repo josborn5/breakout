@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <math.h>
 #include "utils.h"
 #include "math.h"
 
@@ -58,4 +59,9 @@ static Vector2D SubtractVector2D(Vector2D a, Vector2D b)
 static Vector2D MultiplyVector2D(Vector2D a, float scalar)
 {
 	return (Vector2D){ scalar * a.x, scalar * a.y };
+}
+
+static float GetVectorMagnitude(Vector2D vector)
+{
+	return sqrt((vector.x * vector.x) + (vector.y * vector.y));
 }

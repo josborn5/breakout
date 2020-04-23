@@ -1,7 +1,6 @@
 #include "math.h"
 
-const float INIT_BALL_SPEED = 100.0f;
-const float MIN_BALL_SPEED = 50.0f;
+const float MIN_BALL_SPEED = 75.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -63,8 +62,8 @@ static void StartLevel(char newLevel)
 {
 	level = newLevel;
 	allBlocksCleared = false;
-	ballVelocity.y = 50;
-	ballVelocity.x = 5;
+	ballVelocity.y = MIN_BALL_SPEED;
+	ballVelocity.x = MIN_BALL_SPEED;
 
 	ballPosition.y = 20 + ballHalfSize.y;
 	ballPosition.x = 20 + ballHalfSize.x;
@@ -125,11 +124,6 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		score = 0;
 		StartLevel(1);
 		return;
-	}
-
-	if (allBlocksCleared && ((ballVelocity.x * ballVelocity.x) < LEVEL_CHANGE_BALL_SPEED) && ((ballVelocity.y * ballVelocity.y) < LEVEL_CHANGE_BALL_SPEED))
-	{
-		StartLevel(level += 1);
 	}
 
 	if (IsReleased(input, BUTTON_PAUSE))
@@ -235,26 +229,24 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 
 		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
 		// add some air resistance so ball slows down to normal speed after a while
-		if (ballVelocity.x > 0)
+		float ballSpeed = GetVectorMagnitude(ballVelocity);
+		if (ballSpeed > minBallSpeed)
 		{
-			ballVelocity.x = MaxFloat(minBallSpeed, ballVelocity.x *= 0.995);
-		}
-		else if (ballVelocity.x < 0)
-		{
-			ballVelocity.x = MinFloat(-minBallSpeed, ballVelocity.x *= 0.995);
-		}
-		if (ballVelocity.y > 0)
-		{
-			ballVelocity.y = MaxFloat(minBallSpeed, ballVelocity.y *= 0.995);
-		}
-		else if (ballVelocity.y < 0)
-		{
-			ballVelocity.y = MinFloat(-minBallSpeed, ballVelocity.y *= 0.995);
+			float dSpeed = ballSpeed - (0.995 * ballSpeed);
+			float dVelX = dSpeed * ballVelocity.x / ballSpeed;
+			float dVelY = dSpeed * ballVelocity.y / ballSpeed;
+			ballVelocity.x -= dVelX;
+			ballVelocity.y -= dVelY;
 		}
 
-		// final bounds check to makes ure ball doesn't leave the world
+		// final bounds check to make sure ball doesn't leave the world
 		ballPosition.x = ClampFloat(0 + ballHalfSize.x, ballPosition.x, X_DIM_BASE - ballHalfSize.x);
 		ballPosition.y = ClampFloat(0 + ballHalfSize.y, ballPosition.y, Y_DIM_BASE - ballHalfSize.y);
+
+		if (allBlocksCleared && (ballSpeed < LEVEL_CHANGE_BALL_SPEED))
+		{
+			StartLevel(level += 1);
+		}
 	}
 
 	// background
