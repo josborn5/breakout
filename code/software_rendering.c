@@ -67,7 +67,7 @@ static void DrawSprite(RenderBuffer* renderBuffer, Rect gameRect, char *sprite, 
 	float originalY = p.y;
 
 	float blockSize = blockHalfSize * 2.0f;
-	Vector2D blockHalf = (Vector2D){ blockSize, blockSize };
+	Vector2D blockHalf = (Vector2D){ blockHalfSize, blockHalfSize };
 
 	while (*sprite)
 	{
