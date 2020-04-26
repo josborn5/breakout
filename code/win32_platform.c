@@ -18,6 +18,7 @@ struct
 #include "world_transforms.c"
 #include "software_rendering.c"
 #include "platform_common.c"
+#include "levels.c"
 #include "game.c"
 
 global_variable b32 isRunning = true;

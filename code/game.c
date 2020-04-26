@@ -1,4 +1,9 @@
 #include "math.h"
+#include "game.h"
+
+#define BLOCK_ARRAY_SIZE 64
+#define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
+#define BLOCK_AREA_POS (Vector2D){ 30.0f, 70.0f }
 
 const float MIN_BALL_SPEED = 75.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
@@ -40,14 +45,7 @@ Vector2D playerHalfSize;
 Vector2D worldPosition;
 Vector2D worldHalfSize;
 
-struct {
-	Vector2D position;
-	Vector2D halfSize;
-	uint32_t color;
-	b32 exists;
-} typedef Block;
-
-Block blocks[64];
+Block blocks[BLOCK_ARRAY_SIZE];
 int nextBlock;
 
 b32 initialized = false;
@@ -68,26 +66,7 @@ static void StartLevel(char newLevel)
 	ballPosition.y = 20 + ballHalfSize.y;
 	ballPosition.x = 20 + ballHalfSize.x;
 
-	const int BLOCK_ROW_COUNT = 2;
-	const int BLOCK_COL_COUNT = 8;
-	for (int y = 0; y < BLOCK_ROW_COUNT; y += 1)
-	{
-		for (int x = 0; x < BLOCK_COL_COUNT; x += 1)
-		{
-			Block *block = blocks + nextBlock;
-			nextBlock++;
-			if (nextBlock >= ArrayCount(blocks))
-			{
-				nextBlock = 0;
-			}
-			block->exists = 1;
-			block->halfSize.x = BLOCK_WIDTH;
-			block->halfSize.y = BLOCK_HEIGHT;
-			block->position.x = 30 + (2 * x * BLOCK_WIDTH);
-			block->position.y = 60 + (2 * y * BLOCK_HEIGHT);
-			block->color = MakeColorFromGrey((x + y) * 20);
-		}
-	}
+	PopulateBlocksForLevel(newLevel, blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
 }
 
 internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
