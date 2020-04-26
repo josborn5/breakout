@@ -56,7 +56,7 @@ static void CheckBlockAndUndersideOfWallCollision(
 	float yCollisionCheckPos = wallYPos - ballHalfSize.y;
 
 	float tCollision = (yCollisionCheckPos - prevBallPosition.y) / ballVelocity.y;
-	if (tCollision > 0 && tCollision < *maxCollisionTime)
+	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
 		*blockResult = Bottom;
