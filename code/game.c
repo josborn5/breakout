@@ -5,7 +5,7 @@
 #define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
 #define BLOCK_AREA_POS (Vector2D){ 30.0f, 70.0f }
 
-const float MIN_BALL_SPEED = 75.0f;
+const float MIN_BALL_SPEED = 85.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -19,7 +19,7 @@ const float BLOCK_HEIGHT = 3.0f;
 
 const int BLOCK_SCORE = 10;
 
-const float BALL_SIZE = 1.5f;
+const float BALL_SIZE = 1.0f;
 
 const float BAT_WIDTH = 10.0f;
 const float BAT_HEIGHT = 1.0f;

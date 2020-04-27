@@ -3,22 +3,37 @@
 
 char *levels[10] = {
 "\
-00000000\n\
-00000000",
+000000000000\n\
+000000000000\n\
+000000000000",
 
 "\
-   00\n\
-  0000\n\
-00000000",
+     00\n\
+    0000\n\
+  00000000\n\
+000000000000",
 
 "\
-00000000\n\
-  0000\n\
-   00"
+000000000000\n\
+  00000000\n\
+    0000\n\
+     00"
 };
 
 static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, Vector2D blockArea, Vector2D blockAreaPosition)
 {
+	// clear out any remaining blocks in the block array
+	Block* firstBlock = block;
+	Vector2D originVector = (Vector2D) { 0.0f, 0.0f };
+	for (int i = 0; i < blockArraySize; i += 1)
+	{
+		firstBlock->exists = 0;
+		firstBlock->halfSize = originVector;
+		firstBlock->position = originVector;
+		firstBlock->color = 0;
+		firstBlock++;
+	}
+
 	// Temporary hack - force level to be between 1 and 3
 	if (level > 3)
 	{
@@ -50,6 +65,10 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 		}
 		firstCharacter++;
 	}
+	if (columnCounter > columnCount)
+	{
+		columnCount = columnCounter;
+	}
 
 	// Calculate the block size from the row & column counts
 	float blockHeight = blockArea.y / (float)rowCount;
@@ -58,6 +77,8 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 
 	int blockCount = 0;
 	Vector2D blockPosition = blockAreaPosition;
+	blockPosition.x += blockHalfSize.x;
+	blockPosition.y -= blockHalfSize.y;
 	float originalX = blockPosition.x;
 	while (*blockLayoutForLevel)
 	{
