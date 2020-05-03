@@ -70,7 +70,18 @@ static void StartLevel(char newLevel)
 	PopulateBlocksForLevel(newLevel, blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
 }
 
-internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
+static float GetBallHorizontalVelocityFromTopPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)
+{
+	// work out where on the player the ball hit to determine the angle the ball moves after bouncing
+	float horizontalVelocityComponentFactor = 20.0f;
+	// if ball is on left side, factor is -10. Is ball is on right side, factor is 10. Linear scale in between
+	float m = horizontalVelocityComponentFactor / playerHalfSizeX;
+	float b = (horizontalVelocityComponentFactor * playerPositionX) / playerHalfSizeX;
+	float horFactor = (m * ballPositionX) - b;
+	return horFactor;
+}
+
+static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 {
 	if (IsReleased(input, BUTTON_RESET))
 	{
@@ -173,6 +184,12 @@ internal void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 				if (ballCollisionResult == Top || ballCollisionResult == Bottom)
 				{
 					ballVelocity.y *= -1.0f;
+
+					if (playerCollision)
+					{
+						// Add a horizontal velocity to allow player to change ball direction
+						ballVelocity.x += GetBallHorizontalVelocityFromTopPlayerCollision(playerPosition.x, ballPosition.x, playerHalfSize.x);
+					}
 				}
 				else
 				{
