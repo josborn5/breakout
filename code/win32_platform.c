@@ -1,18 +1,8 @@
 #include <stdint.h>
 #include <windows.h>
 
-struct
-{
-	// platform independent
-	int width;
-	int height;
-	uint32_t *pixels;
-
-	// platform dependent
-	BITMAPINFO bitmapInfo;
-} typedef RenderBuffer;
-
-#include "utils.h"	// this needs to be first as it defines some #defines used in the other *.c files
+#include "platform.h"
+#include "utils.h"
 #include "math.c"
 #include "collision.c"
 #include "world_transforms.c"
@@ -23,7 +13,8 @@ struct
 
 global_variable b32 isRunning = true;
 global_variable b32 showRectangle = false;
-global_variable RenderBuffer renderBuffer;
+global_variable RenderBuffer renderBuffer;	// platform independent
+global_variable BITMAPINFO bitmapInfo;	// platform dependent
 
 internal LRESULT windowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -54,12 +45,12 @@ internal LRESULT windowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 			renderBuffer.pixels = VirtualAlloc(0, sizeof(uint32_t) * renderBuffer.width * renderBuffer.height, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
 
 			// Fill the bitmap info
-			renderBuffer.bitmapInfo.bmiHeader.biSize = sizeof(renderBuffer.bitmapInfo.bmiHeader);
-			renderBuffer.bitmapInfo.bmiHeader.biWidth = renderBuffer.width;
-			renderBuffer.bitmapInfo.bmiHeader.biHeight = renderBuffer.height;
-			renderBuffer.bitmapInfo.bmiHeader.biPlanes = 1;
-			renderBuffer.bitmapInfo.bmiHeader.biBitCount = 32;
-			renderBuffer.bitmapInfo.bmiHeader.biCompression = BI_RGB;
+			bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
+			bitmapInfo.bmiHeader.biWidth = renderBuffer.width;
+			bitmapInfo.bmiHeader.biHeight = renderBuffer.height;
+			bitmapInfo.bmiHeader.biPlanes = 1;
+			bitmapInfo.bmiHeader.biBitCount = 32;
+			bitmapInfo.bmiHeader.biCompression = BI_RGB;
 			break;
 		}
 
@@ -167,7 +158,7 @@ int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nS
 		StretchDIBits(hdc,
 			0, 0, renderBuffer.width, renderBuffer.height,
 			0, 0, renderBuffer.width, renderBuffer.height,
-			renderBuffer.pixels, &renderBuffer.bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+			renderBuffer.pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 
 		// Get the frame time
 		LARGE_INTEGER currentCounter;

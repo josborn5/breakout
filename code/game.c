@@ -1,5 +1,6 @@
 #include "math.h"
 #include "game.h"
+#include "platform.h"
 
 #define BLOCK_ARRAY_SIZE 64
 #define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
