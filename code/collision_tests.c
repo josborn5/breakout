@@ -67,6 +67,46 @@ static void RunCheckCollisionBetweenMovingObjectsTests(Vector2D aVelocity, Vecto
 	assert(bPosition1.y == expectedCollisionPosition.y);
 }
 
+static void RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D blockPosition0, Vector2D blockVelocity, float expectedCollisionTime, int expectedCollisionResult, Vector2D expectedCollisionPosition)
+{
+	float wallYPos = 0.0f;
+	Vector2D blockHalfSize = oneByOneHalfSize;
+
+	Vector2D blockPosition1 = (Vector2D){ blockPosition0.x, blockPosition0.y };
+	float collisionTime = originalCollisionTime;
+	int collisionResult = None;
+
+	CheckBlockAndTopsideOfWallCollision(wallYPos, blockHalfSize, blockPosition0, blockVelocity, &collisionTime, &collisionResult, &blockPosition1);
+	printf("collisionResult is %d\n", collisionResult);
+	printf("collisionTime is %f\n", collisionTime);
+	printf("collisionPosition.x is %f\n", blockPosition1.x);
+	printf("collisionPosition.y is %f\n\n", blockPosition1.y);
+	assert(collisionResult == expectedCollisionResult);
+	assert(collisionTime == expectedCollisionTime);
+	assert(blockPosition1.x == expectedCollisionPosition.x);
+	assert(blockPosition1.y == expectedCollisionPosition.y);
+}
+
+static void RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D blockPosition0, Vector2D blockVelocity, float expectedCollisionTime, int expectedCollisionResult, Vector2D expectedCollisionPosition)
+{
+	float wallYPos = 0.0f;
+	Vector2D blockHalfSize = oneByOneHalfSize;
+
+	Vector2D blockPosition1 = (Vector2D) { blockPosition0.x, blockPosition0.y };
+	float collisionTime = originalCollisionTime;
+	int collisionResult = None;
+
+	CheckBlockAndUndersideOfWallCollision(wallYPos, blockHalfSize, blockPosition0, blockVelocity, &collisionTime, &collisionResult, &blockPosition1);
+	printf("collisionResult is %d\n", collisionResult);
+	printf("collisionTime is %f\n", collisionTime);
+	printf("collisionPosition.x is %f\n", blockPosition1.x);
+	printf("collisionPosition.y is %f\n\n", blockPosition1.y);
+	assert(collisionResult == expectedCollisionResult);
+	assert(collisionTime == expectedCollisionTime);
+	assert(blockPosition1.x == expectedCollisionPosition.x);
+	assert(blockPosition1.y == expectedCollisionPosition.y);
+}
+
 static void RunCollisionTests()
 {
 	/*
@@ -114,7 +154,7 @@ static void RunCollisionTests()
 	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingLeft, originalCollisionTime, None, (Vector2D){ -4.0f, 0.0f });
 
 	// Collision on x axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, (Vector2D){ -2.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, (Vector2D){ -2.0f, 0.0f });
 
 	// No Collision on x axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ -4.0f, 2.000001f }, movingRight, originalCollisionTime, None, (Vector2D){ -4.0f, 2.000001f });
@@ -146,7 +186,7 @@ static void RunCollisionTests()
 	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingDown, originalCollisionTime, None, (Vector2D){ 0.0f, -4.0f });
 
 	// Collision on y axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, (Vector2D){ 2.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, (Vector2D){ 0.0f, -2.0f });
 
 	// No Collision on y axis when moving toward each other off center at boundary
 	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.000001f, -4.0f }, movingUp, originalCollisionTime, None, (Vector2D){ 2.000001f, -4.0f });
@@ -252,4 +292,77 @@ static void RunCollisionTests()
 	 // collision on y-axis
 	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, -1.0f }, blockAboveOrigin, movingDown, 2.0f, Top, (Vector2D){ 0.0f, 0.0f });
 
+
+	/*
+	 * CheckBlockAndTopsideOfWallCollision
+	 *
+	 */
+
+	/* B
+	 * |
+	 * V
+	 *---
+	 */
+	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 10.0f, 4.0f }, movingDown, 1.5f, Top, (Vector2D){ 10.0f, 1.0f });
+
+	/* B
+	 *---
+	 * |
+	 * V
+	 */
+	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ -10.0f, 1.0f }, movingDown, 0.0f, Top, (Vector2D){ -10.0f, 1.0f });
+
+	/* Λ
+	 * |
+	 * B
+	 *---
+	 */
+	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingUp, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+
+	/* B-->
+	 *------
+	 */
+	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingRight, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+
+	/* <--B
+	 *------
+	 */
+	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingLeft, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+
+
+	/*
+	 * CheckBlockAndUndersideOfWallCollision
+	 *
+	 */
+
+	 /*---
+	  * Λ
+	  * |
+	  * B
+	  */
+	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 10.0f, -4.0f }, movingUp, 1.5f, Bottom, (Vector2D){ 10.0f, -1.0f });
+
+	/* Λ
+	 * |
+	 *---
+	 * B
+	 */
+	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ -10.0f, -1.0f }, movingUp, 0.0f, Bottom, (Vector2D){ -10.0f, -1.0f });
+
+	/*---
+	 * B
+	 * |
+	 * V
+	 */
+	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingDown, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
+
+	/*------
+	 *B-->
+	 */
+	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingRight, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
+
+	/*------
+	 * <--B
+	 */
+	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingLeft, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
 }
