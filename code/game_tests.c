@@ -2,17 +2,17 @@
 
 #include "game.c"
 
-static void RunGetBallHorizontalVelocityFromTopPlayerCollisionTest(float playerPosX, float ballPosX, float playerHalfSizeX, float expectedResult)
+static void RunGetThetaForBallPlayerCollisionTest(float playerPosX, float ballPosX, float playerHalfSizeX, float expectedResult)
 {
-	float result = GetBallHorizontalVelocityFromTopPlayerCollision(playerPosX, ballPosX, playerHalfSizeX);
+	float result = GetThetaForBallPlayerCollision(playerPosX, ballPosX, playerHalfSizeX);
 	assert(result == expectedResult);
 }
 
 static void RunGameTests()
 {
-	RunGetBallHorizontalVelocityFromTopPlayerCollisionTest(20.0f, 15.0f, 5.0f, -20.0f);
+	RunGetThetaForBallPlayerCollisionTest(20.0f, 15.0f, 5.0f, -1.0f);
 
-	RunGetBallHorizontalVelocityFromTopPlayerCollisionTest(20.0f, 20.0f, 5.0f, 0.0f);
+	RunGetThetaForBallPlayerCollisionTest(20.0f, 20.0f, 5.0f, 0.0f);
 
-	RunGetBallHorizontalVelocityFromTopPlayerCollisionTest(20.0f, 25.0f, 5.0f, 20.0f);
+	RunGetThetaForBallPlayerCollisionTest(20.0f, 25.0f, 5.0f, 1.0f);
 }

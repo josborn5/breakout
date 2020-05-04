@@ -6,7 +6,7 @@
 #define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
 #define BLOCK_AREA_POS (Vector2D){ 30.0f, 70.0f }
 
-const float MIN_BALL_SPEED = 85.0f;
+const float MIN_BALL_SPEED = 75.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
@@ -70,13 +70,14 @@ static void StartLevel(char newLevel)
 	PopulateBlocksForLevel(newLevel, blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
 }
 
-static float GetBallHorizontalVelocityFromTopPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)
+static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)
 {
+	
+	
 	// work out where on the player the ball hit to determine the angle the ball moves after bouncing
-	float horizontalVelocityComponentFactor = 20.0f;
-	// if ball is on left side, factor is -10. Is ball is on right side, factor is 10. Linear scale in between
-	float m = horizontalVelocityComponentFactor / playerHalfSizeX;
-	float b = (horizontalVelocityComponentFactor * playerPositionX) / playerHalfSizeX;
+	float thetaInRadians = 1.0f;
+	float m = thetaInRadians / playerHalfSizeX;
+	float b = (thetaInRadians * playerPositionX) / playerHalfSizeX;
 	float horFactor = (m * ballPositionX) - b;
 	return horFactor;
 }
@@ -185,10 +186,13 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 				{
 					ballVelocity.y *= -1.0f;
 
-					if (playerCollision)
+					if (playerCollision && ballCollisionResult == Top)
 					{
 						// Add a horizontal velocity to allow player to change ball direction
-						ballVelocity.x += GetBallHorizontalVelocityFromTopPlayerCollision(playerPosition.x, ballPosition.x, playerHalfSize.x);
+						float ballAngleFromNormal = GetThetaForBallPlayerCollision(playerPosition.x, ballPosition.x, playerHalfSize.x);
+						float ballSpeed = GetVectorMagnitude(ballVelocity);
+						ballVelocity.x = sin(ballAngleFromNormal) * ballSpeed;
+						ballVelocity.y = cos(ballAngleFromNormal) * ballSpeed;
 					}
 				}
 				else
