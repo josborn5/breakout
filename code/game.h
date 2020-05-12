@@ -1,6 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
+#define BLOCK_ARRAY_SIZE 64
+#define BALL_ARRY_SIZE 3
+
 struct {
 	Vector2D prevPosition;
 	Vector2D position;
@@ -21,5 +24,14 @@ struct {
 	uint32_t color;
 	b32 exists;
 } typedef Block;
+
+struct {
+	Player player;
+	Ball balls[BALL_ARRY_SIZE];
+	Block blocks[BLOCK_ARRAY_SIZE];
+	int level;
+	int score;
+	int lives;
+} typedef GameState;
 
 #endif
