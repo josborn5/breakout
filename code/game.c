@@ -30,11 +30,6 @@ internal const int X_DIM_BASE = 160;
 internal const int Y_DIM_BASE = 90;
 const int STARTING_LIVES = 3;
 
-Vector2D prevBallPosition;
-Vector2D ballPosition;
-Vector2D ballVelocity;
-Vector2D ballHalfSize;
-
 float minPlayerX;
 float maxPlayerX;
 
@@ -45,6 +40,8 @@ Vector2D playerHalfSize;
 
 Vector2D worldPosition;
 Vector2D worldHalfSize;
+
+Ball ball;
 
 Block blocks[BLOCK_ARRAY_SIZE];
 int nextBlock;
@@ -60,11 +57,11 @@ char debugStringBuffer[256];
 
 static void ResetBall()
 {
-	ballVelocity.y = MIN_BALL_SPEED;
-	ballVelocity.x = MIN_BALL_SPEED;
+	ball.velocity.y = MIN_BALL_SPEED;
+	ball.velocity.x = MIN_BALL_SPEED;
 
-	ballPosition.y = 20 + ballHalfSize.y;
-	ballPosition.x = 20 + ballHalfSize.x;
+	ball.position.y = 20 + ball.halfSize.y;
+	ball.position.x = 20 + ball.halfSize.x;
 }
 
 static void StartLevel(char newLevel)
@@ -79,8 +76,6 @@ static void StartLevel(char newLevel)
 
 static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)
 {
-	
-	
 	// work out where on the player the ball hit to determine the angle the ball moves after bouncing
 	float thetaInRadians = 1.0f;
 	float m = thetaInRadians / playerHalfSizeX;
@@ -106,7 +101,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		worldHalfSize = (Vector2D){ worldHalfX, worldHalfY };
 		worldPosition = (Vector2D){ worldHalfX, worldHalfY };
 		
-		ballHalfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
+		ball.halfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
 		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 		minPlayerX = 0.0f;
@@ -150,17 +145,11 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
 		{
 			// cache the previous position
-			prevBallPosition.x = ballPosition.x;
-			prevBallPosition.y = ballPosition.y;
-			
-			ballPosition = AddVector2D(prevBallPosition, MultiplyVector2D(ballVelocity, t1 - t0));
-
-			// Define a rect over the path the ball takes in the current timestep. Use this to work our which blocks could be collided with
-			Vector2D ballPathBottomLeft = (Vector2D) {MinFloat(ballPosition.x, prevBallPosition.x), MinFloat(ballPosition.y, prevBallPosition.y)};
-			Vector2D ballPathTopRight = (Vector2D) {MaxFloat(ballPosition.x, prevBallPosition.x), MaxFloat(ballPosition.y, prevBallPosition.y)};
+			ball.prevPosition = ball.position;
+			ball.position = AddVector2D(ball.prevPosition, MultiplyVector2D(ball.velocity, t1 - t0));
 
 			// Check for collision between any boundary of the world
-			CheckBlockAndTopsideOfWallCollision(0, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			CheckBlockAndTopsideOfWallCollision(0, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
 			if (ballCollisionResult != None)
 			{
 				lives -= 1;
@@ -177,23 +166,19 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 				}
 			}
 
-			CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
-			CheckBlockAndLeftWallCollision(0, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
-			CheckBlockAndRightWallCollision(X_DIM_BASE, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
+			CheckBlockAndLeftWallCollision(0, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
+			CheckBlockAndRightWallCollision(X_DIM_BASE, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
 
 			int blockHitIndex = -1;
 
 			// check for collision between ball and blocks
-			for (int i = 0; i < ArrayCount(blocks); i++)
-			// for (Block *block = blocks; block != blocks + ArrayCount(blocks); block++)
+			for (int i = 0; i < ArrayCount(blocks); i += 1)
 			{
 				Block *block = &blocks[i];
 				if (!block->exists) continue;
 
-				// Check if the block lies on the path the ball takes on the current timestep
-				// if(!AABBCollideCornerToRect(block->halfSize, block->position, ballPathTopRight, ballPathBottomLeft)) continue;
-
-				b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+				b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
 				if (collided)
 				{
 					blockHitIndex = i;
@@ -201,22 +186,22 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			}
 
 			// Check for collision between ball and bat
-			b32 playerCollision = CheckCollisionBetweenMovingObjects(playerHalfSize, prevPlayerPosition, playerVelocity, ballHalfSize, prevBallPosition, ballVelocity, &minCollisionTime, &ballCollisionResult, &ballPosition);
+			b32 playerCollision = CheckCollisionBetweenMovingObjects(playerHalfSize, prevPlayerPosition, playerVelocity, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
 
 			checkCollision = (ballCollisionResult != None);
 			if (checkCollision)
 			{
 				if (ballCollisionResult == Top || ballCollisionResult == Bottom)
 				{
-					ballVelocity.y *= -1.0f;
+					ball.velocity.y *= -1.0f;
 
 					if (playerCollision && ballCollisionResult == Top)
 					{
 						// Add a horizontal velocity to allow player to change ball direction
-						float ballAngleFromNormal = GetThetaForBallPlayerCollision(playerPosition.x, ballPosition.x, playerHalfSize.x);
-						float ballSpeed = GetVectorMagnitude(ballVelocity);
-						ballVelocity.x = sin(ballAngleFromNormal) * ballSpeed;
-						ballVelocity.y = cos(ballAngleFromNormal) * ballSpeed;
+						float ballAngleFromNormal = GetThetaForBallPlayerCollision(playerPosition.x, ball.position.x, playerHalfSize.x);
+						float ballSpeed = GetVectorMagnitude(ball.velocity);
+						ball.velocity.x = sin(ballAngleFromNormal) * ballSpeed;
+						ball.velocity.y = cos(ballAngleFromNormal) * ballSpeed;
 					}
 				}
 				else
@@ -225,18 +210,18 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 					{
 						if (ballCollisionResult == Left)
 						{
-							float ballVelocityX = (ballVelocity.x > 0) ? -ballVelocity.x : ballVelocity.x;
-							ballVelocity.x = MinFloat(ballVelocityX, playerVelocity.x);
+							float ballVelocityX = (ball.velocity.x > 0) ? -ball.velocity.x : ball.velocity.x;
+							ball.velocity.x = MinFloat(ballVelocityX, playerVelocity.x);
 						}
 						else
 						{
-							float ballVelocityX = (ballVelocity.x < 0) ? -ballVelocity.x : ballVelocity.x;
-							ballVelocity.x = MaxFloat(ballVelocityX, playerVelocity.x);
+							float ballVelocityX = (ball.velocity.x < 0) ? -ball.velocity.x : ball.velocity.x;
+							ball.velocity.x = MaxFloat(ballVelocityX, playerVelocity.x);
 						}
 					}
 					else // collision with block
 					{
-						ballVelocity.x *= -1.0f;
+						ball.velocity.x *= -1.0f;
 					}
 				}
 				t0 = minCollisionTime;		// Update t0 so next ball position calculation starts from the collision time
@@ -247,6 +232,10 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 					Block *block = &blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
 					block->exists = false;
 					score += BLOCK_SCORE;
+
+					// speed up the ball a little
+					ball.velocity.x *= 1.2f;
+					ball.velocity.y *= 1.2f;
 				}
 			}
 			collisionCheckCount += 1;
@@ -254,19 +243,19 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 
 		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
 		// add some air resistance so ball slows down to normal speed after a while
-		float ballSpeed = GetVectorMagnitude(ballVelocity);
+		float ballSpeed = GetVectorMagnitude(ball.velocity);
 		if (ballSpeed > minBallSpeed)
 		{
 			float dSpeed = ballSpeed - (0.995 * ballSpeed);
-			float dVelX = dSpeed * ballVelocity.x / ballSpeed;
-			float dVelY = dSpeed * ballVelocity.y / ballSpeed;
-			ballVelocity.x -= dVelX;
-			ballVelocity.y -= dVelY;
+			float dVelX = dSpeed * ball.velocity.x / ballSpeed;
+			float dVelY = dSpeed * ball.velocity.y / ballSpeed;
+			ball.velocity.x -= dVelX;
+			ball.velocity.y -= dVelY;
 		}
 
 		// final bounds check to make sure ball doesn't leave the world
-		ballPosition.x = ClampFloat(0 + ballHalfSize.x, ballPosition.x, X_DIM_BASE - ballHalfSize.x);
-		ballPosition.y = ClampFloat(0 + ballHalfSize.y, ballPosition.y, Y_DIM_BASE - ballHalfSize.y);
+		ball.position.x = ClampFloat(0 + ball.halfSize.x, ball.position.x, X_DIM_BASE - ball.halfSize.x);
+		ball.position.y = ClampFloat(0 + ball.halfSize.y, ball.position.y, Y_DIM_BASE - ball.halfSize.y);
 
 		if (allBlocksCleared && (ballSpeed < LEVEL_CHANGE_BALL_SPEED))
 		{
@@ -291,7 +280,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	}
 
 	// ball
-	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, ballHalfSize, ballPosition);
+	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, ball.halfSize, ball.position);
 
 	// Balls, Level & Score
 	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "BALLS", (Vector2D){ 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
