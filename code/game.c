@@ -109,8 +109,8 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		ballHalfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
 		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
-		minPlayerX = playerHalfSize.x;
-		maxPlayerX = X_DIM_BASE - playerHalfSize.x;
+		minPlayerX = 0.0f;
+		maxPlayerX = X_DIM_BASE;
 
 		playerPosition.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
 		playerPosition.x = ClampFloat(minPlayerX, playerPosition.x, maxPlayerX);
