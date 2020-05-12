@@ -6,6 +6,13 @@ struct {
 	Vector2D position;
 	Vector2D halfSize;
 	Vector2D velocity;
+} typedef Player;
+
+struct {
+	Vector2D prevPosition;
+	Vector2D position;
+	Vector2D halfSize;
+	Vector2D velocity;
 } typedef Ball;
 
 struct {

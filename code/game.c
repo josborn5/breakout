@@ -33,18 +33,12 @@ const int STARTING_LIVES = 3;
 float minPlayerX;
 float maxPlayerX;
 
-Vector2D prevPlayerPosition;
-Vector2D playerPosition;
-Vector2D playerVelocity;
-Vector2D playerHalfSize;
-
 Vector2D worldPosition;
 Vector2D worldHalfSize;
 
+Player player;
 Ball ball;
-
 Block blocks[BLOCK_ARRAY_SIZE];
-int nextBlock;
 
 b32 initialized = false;
 b32 isPaused = false;
@@ -102,18 +96,18 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		worldPosition = (Vector2D){ worldHalfX, worldHalfY };
 		
 		ball.halfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
-		playerHalfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
+		player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 		minPlayerX = 0.0f;
 		maxPlayerX = X_DIM_BASE;
 
-		playerPosition.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
-		playerPosition.x = ClampFloat(minPlayerX, playerPosition.x, maxPlayerX);
-		playerPosition.y = 20;
-		prevPlayerPosition.x = playerPosition.x;
-		prevPlayerPosition.y = playerPosition.y;
-		playerVelocity.y = 0;
-		playerVelocity.x = 0;
+		player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+		player.position.x = ClampFloat(minPlayerX, player.position.x, maxPlayerX);
+		player.position.y = 20;
+		player.prevPosition.x = player.position.x;
+		player.prevPosition.y = player.position.y;
+		player.velocity.y = 0;
+		player.velocity.x = 0;
 
 		score = 0;
 		lives = STARTING_LIVES;
@@ -129,10 +123,10 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	if (!isPaused)
 	{
 		// ball
-		prevPlayerPosition.x = playerPosition.x;
-		playerPosition.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
-		playerPosition.x = ClampFloat(minPlayerX, playerPosition.x, maxPlayerX);
-		playerVelocity.x = (playerPosition.x - prevPlayerPosition.x) / dt;
+		player.prevPosition.x = player.position.x;
+		player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+		player.position.x = ClampFloat(minPlayerX, player.position.x, maxPlayerX);
+		player.velocity.x = (player.position.x - player.prevPosition.x) / dt;
 
 		float minCollisionTime = dt;
 		float t1 = dt;
@@ -186,7 +180,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 			}
 
 			// Check for collision between ball and bat
-			b32 playerCollision = CheckCollisionBetweenMovingObjects(playerHalfSize, prevPlayerPosition, playerVelocity, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
+			b32 playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, ball.halfSize, ball.prevPosition, ball.velocity, &minCollisionTime, &ballCollisionResult, &ball.position);
 
 			checkCollision = (ballCollisionResult != None);
 			if (checkCollision)
@@ -198,7 +192,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 					if (playerCollision && ballCollisionResult == Top)
 					{
 						// Add a horizontal velocity to allow player to change ball direction
-						float ballAngleFromNormal = GetThetaForBallPlayerCollision(playerPosition.x, ball.position.x, playerHalfSize.x);
+						float ballAngleFromNormal = GetThetaForBallPlayerCollision(player.position.x, ball.position.x, player.halfSize.x);
 						float ballSpeed = GetVectorMagnitude(ball.velocity);
 						ball.velocity.x = sin(ballAngleFromNormal) * ballSpeed;
 						ball.velocity.y = cos(ballAngleFromNormal) * ballSpeed;
@@ -211,12 +205,12 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 						if (ballCollisionResult == Left)
 						{
 							float ballVelocityX = (ball.velocity.x > 0) ? -ball.velocity.x : ball.velocity.x;
-							ball.velocity.x = MinFloat(ballVelocityX, playerVelocity.x);
+							ball.velocity.x = MinFloat(ballVelocityX, player.velocity.x);
 						}
 						else
 						{
 							float ballVelocityX = (ball.velocity.x < 0) ? -ball.velocity.x : ball.velocity.x;
-							ball.velocity.x = MaxFloat(ballVelocityX, playerVelocity.x);
+							ball.velocity.x = MaxFloat(ballVelocityX, player.velocity.x);
 						}
 					}
 					else // collision with block
@@ -267,7 +261,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	ClearScreenAndDrawRect(&renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
 
 	// player
-	DrawRect(&renderBuffer, GAME_RECT, BAT_COLOR, playerHalfSize, playerPosition);
+	DrawRect(&renderBuffer, GAME_RECT, BAT_COLOR, player.halfSize, player.position);
 
 	// blocks
 	allBlocksCleared = true;
