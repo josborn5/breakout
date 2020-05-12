@@ -293,8 +293,8 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 	// ball
 	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, ballHalfSize, ballPosition);
 
-	// Lives, Level & Score
-	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "LIVES", (Vector2D){ 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	// Balls, Level & Score
+	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "BALLS", (Vector2D){ 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 	DrawNumber(&renderBuffer, GAME_RECT, lives, (Vector2D){ 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 
 	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "LEVEL", (Vector2D){ 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
