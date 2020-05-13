@@ -71,6 +71,144 @@ static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPos
 	return horFactor;
 }
 
+static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, float dt)
+{
+	gamestate->player.prevPosition.x = gamestate->player.position.x;
+	gamestate->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+	gamestate->player.position.x = ClampFloat(minPlayerX, gamestate->player.position.x, maxPlayerX);
+	gamestate->player.velocity.x = (gamestate->player.position.x - gamestate->player.prevPosition.x) / dt;
+
+	float minCollisionTime = dt;
+	float t1 = dt;
+	float t0 = 0.0f;
+	int ballCollisionResult = None;
+	int collisionCheckCount = 0;
+	int maxCollisionCheckCount = 4;
+	b32 checkCollision = true;
+
+	while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
+	{
+		// cache the previous position
+		gamestate->balls[0].prevPosition = gamestate->balls[0].position;
+		gamestate->balls[0].position = AddVector2D(gamestate->balls[0].prevPosition, MultiplyVector2D(gamestate->balls[0].velocity, t1 - t0));
+
+		// Check for collision between any boundary of the world
+		CheckBlockAndTopsideOfWallCollision(0, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+		if (ballCollisionResult != None)
+		{
+			gamestate->lives -= 1;
+
+			if (gamestate->lives <= 0)
+			{
+				initialized = false; // TODO: GAMEOVER. For now, restart.
+				return;
+			}
+			else
+			{
+				ResetBall();
+				return;
+			}
+		}
+
+		CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+		CheckBlockAndLeftWallCollision(0, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+		CheckBlockAndRightWallCollision(X_DIM_BASE, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+
+		int blockHitIndex = -1;
+
+		// check for collision between ball and blocks
+		for (int i = 0; i < ArrayCount(gamestate->blocks); i += 1)
+		{
+			Block *block = &gamestate->blocks[i];
+			if (!block->exists) continue;
+
+			b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+			if (collided)
+			{
+				blockHitIndex = i;
+			}
+		}
+
+		// Check for collision between ball and bat
+		Player player = gamestate->player;
+		b32 playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, gamestate->balls[0].halfSize, gamestate->balls[0].prevPosition, gamestate->balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[0].position);
+
+		checkCollision = (ballCollisionResult != None);
+		if (checkCollision)
+		{
+			if (ballCollisionResult == Top || ballCollisionResult == Bottom)
+			{
+				gamestate->balls[0].velocity.y *= -1.0f;
+
+				if (playerCollision && ballCollisionResult == Top)
+				{
+					// Add a horizontal velocity to allow player to change ball direction
+					float ballAngleFromNormal = GetThetaForBallPlayerCollision(player.position.x, gamestate->balls[0].position.x, player.halfSize.x);
+					float ballSpeed = GetVectorMagnitude(gamestate->balls[0].velocity);
+					gamestate->balls[0].velocity.x = sin(ballAngleFromNormal) * ballSpeed;
+					gamestate->balls[0].velocity.y = cos(ballAngleFromNormal) * ballSpeed;
+				}
+			}
+			else
+			{
+				if (playerCollision)
+				{
+					if (ballCollisionResult == Left)
+					{
+						float ballVelocityX = (gamestate->balls[0].velocity.x > 0) ? -gamestate->balls[0].velocity.x : gamestate->balls[0].velocity.x;
+						gamestate->balls[0].velocity.x = MinFloat(ballVelocityX, player.velocity.x);
+					}
+					else
+					{
+						float ballVelocityX = (gamestate->balls[0].velocity.x < 0) ? -gamestate->balls[0].velocity.x : gamestate->balls[0].velocity.x;
+						gamestate->balls[0].velocity.x = MaxFloat(ballVelocityX, player.velocity.x);
+					}
+				}
+				else // collision with block
+				{
+					gamestate->balls[0].velocity.x *= -1.0f;
+				}
+			}
+			t0 = minCollisionTime;		// Update t0 so next ball position calculation starts from the collision time
+			ballCollisionResult = None;	// Reset collision result for next loop
+
+			if (blockHitIndex != -1)
+			{
+				Block *block = &gamestate->blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
+				block->exists = false;
+				gamestate->score += BLOCK_SCORE;
+
+				// speed up the ball a little
+				gamestate->balls[0].velocity.x *= 1.2f;
+				gamestate->balls[0].velocity.y *= 1.2f;
+			}
+		}
+		collisionCheckCount += 1;
+	}
+
+	float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
+	// add some air resistance so ball slows down to normal speed after a while
+	float ballSpeed = GetVectorMagnitude(gamestate->balls[0].velocity);
+	if (ballSpeed > minBallSpeed)
+	{
+		float dSpeed = ballSpeed - (0.995 * ballSpeed);
+		float dVelX = dSpeed * gamestate->balls[0].velocity.x / ballSpeed;
+		float dVelY = dSpeed * gamestate->balls[0].velocity.y / ballSpeed;
+		gamestate->balls[0].velocity.x -= dVelX;
+		gamestate->balls[0].velocity.y -= dVelY;
+	}
+
+	// final bounds check to make sure ball doesn't leave the world
+	gamestate->balls[0].position.x = ClampFloat(0 + gamestate->balls[0].halfSize.x, gamestate->balls[0].position.x, X_DIM_BASE - gamestate->balls[0].halfSize.x);
+	gamestate->balls[0].position.y = ClampFloat(0 + gamestate->balls[0].halfSize.y, gamestate->balls[0].position.y, Y_DIM_BASE - gamestate->balls[0].halfSize.y);
+
+	if (allBlocksCleared && (ballSpeed < LEVEL_CHANGE_BALL_SPEED))
+	{
+		gamestate->level += 1;
+		StartLevel(gamestate->level);
+	}
+}
+
 static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 {
 	if (IsReleased(input, BUTTON_RESET))
@@ -116,141 +254,7 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 
 	if (!isPaused)
 	{
-		// ball
-		gamestate.player.prevPosition.x = gamestate.player.position.x;
-		gamestate.player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
-		gamestate.player.position.x = ClampFloat(minPlayerX, gamestate.player.position.x, maxPlayerX);
-		gamestate.player.velocity.x = (gamestate.player.position.x - gamestate.player.prevPosition.x) / dt;
-
-		float minCollisionTime = dt;
-		float t1 = dt;
-		float t0 = 0.0f;
-		int ballCollisionResult = None;
-		int collisionCheckCount = 0;
-		int maxCollisionCheckCount = 4;
-		b32 checkCollision = true;
-
-		while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
-		{
-			// cache the previous position
-			gamestate.balls[0].prevPosition = gamestate.balls[0].position;
-			gamestate.balls[0].position = AddVector2D(gamestate.balls[0].prevPosition, MultiplyVector2D(gamestate.balls[0].velocity, t1 - t0));
-
-			// Check for collision between any boundary of the world
-			CheckBlockAndTopsideOfWallCollision(0, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-			if (ballCollisionResult != None)
-			{
-				gamestate.lives -= 1;
-
-				if (gamestate.lives <= 0)
-				{
-					initialized = false; // TODO: GAMEOVER. For now, restart.
-					return;
-				}
-				else
-				{
-					ResetBall();
-					return;
-				}
-			}
-
-			CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-			CheckBlockAndLeftWallCollision(0, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-			CheckBlockAndRightWallCollision(X_DIM_BASE, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-
-			int blockHitIndex = -1;
-
-			// check for collision between ball and blocks
-			for (int i = 0; i < ArrayCount(gamestate.blocks); i += 1)
-			{
-				Block *block = &gamestate.blocks[i];
-				if (!block->exists) continue;
-
-				b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-				if (collided)
-				{
-					blockHitIndex = i;
-				}
-			}
-
-			// Check for collision between ball and bat
-			Player player = gamestate.player;
-			b32 playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, gamestate.balls[0].halfSize, gamestate.balls[0].prevPosition, gamestate.balls[0].velocity, &minCollisionTime, &ballCollisionResult, &gamestate.balls[0].position);
-
-			checkCollision = (ballCollisionResult != None);
-			if (checkCollision)
-			{
-				if (ballCollisionResult == Top || ballCollisionResult == Bottom)
-				{
-					gamestate.balls[0].velocity.y *= -1.0f;
-
-					if (playerCollision && ballCollisionResult == Top)
-					{
-						// Add a horizontal velocity to allow player to change ball direction
-						float ballAngleFromNormal = GetThetaForBallPlayerCollision(player.position.x, gamestate.balls[0].position.x, player.halfSize.x);
-						float ballSpeed = GetVectorMagnitude(gamestate.balls[0].velocity);
-						gamestate.balls[0].velocity.x = sin(ballAngleFromNormal) * ballSpeed;
-						gamestate.balls[0].velocity.y = cos(ballAngleFromNormal) * ballSpeed;
-					}
-				}
-				else
-				{
-					if (playerCollision)
-					{
-						if (ballCollisionResult == Left)
-						{
-							float ballVelocityX = (gamestate.balls[0].velocity.x > 0) ? -gamestate.balls[0].velocity.x : gamestate.balls[0].velocity.x;
-							gamestate.balls[0].velocity.x = MinFloat(ballVelocityX, player.velocity.x);
-						}
-						else
-						{
-							float ballVelocityX = (gamestate.balls[0].velocity.x < 0) ? -gamestate.balls[0].velocity.x : gamestate.balls[0].velocity.x;
-							gamestate.balls[0].velocity.x = MaxFloat(ballVelocityX, player.velocity.x);
-						}
-					}
-					else // collision with block
-					{
-						gamestate.balls[0].velocity.x *= -1.0f;
-					}
-				}
-				t0 = minCollisionTime;		// Update t0 so next ball position calculation starts from the collision time
-				ballCollisionResult = None;	// Reset collision result for next loop
-
-				if (blockHitIndex != -1)
-				{
-					Block *block = &gamestate.blocks[blockHitIndex]; // Use derefence operator to update data in the blocks array here
-					block->exists = false;
-					gamestate.score += BLOCK_SCORE;
-
-					// speed up the ball a little
-					gamestate.balls[0].velocity.x *= 1.2f;
-					gamestate.balls[0].velocity.y *= 1.2f;
-				}
-			}
-			collisionCheckCount += 1;
-		}
-
-		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
-		// add some air resistance so ball slows down to normal speed after a while
-		float ballSpeed = GetVectorMagnitude(gamestate.balls[0].velocity);
-		if (ballSpeed > minBallSpeed)
-		{
-			float dSpeed = ballSpeed - (0.995 * ballSpeed);
-			float dVelX = dSpeed * gamestate.balls[0].velocity.x / ballSpeed;
-			float dVelY = dSpeed * gamestate.balls[0].velocity.y / ballSpeed;
-			gamestate.balls[0].velocity.x -= dVelX;
-			gamestate.balls[0].velocity.y -= dVelY;
-		}
-
-		// final bounds check to make sure ball doesn't leave the world
-		gamestate.balls[0].position.x = ClampFloat(0 + gamestate.balls[0].halfSize.x, gamestate.balls[0].position.x, X_DIM_BASE - gamestate.balls[0].halfSize.x);
-		gamestate.balls[0].position.y = ClampFloat(0 + gamestate.balls[0].halfSize.y, gamestate.balls[0].position.y, Y_DIM_BASE - gamestate.balls[0].halfSize.y);
-
-		if (allBlocksCleared && (ballSpeed < LEVEL_CHANGE_BALL_SPEED))
-		{
-			gamestate.level += 1;
-			StartLevel(gamestate.level);
-		}
+		UpdateGameState(&gamestate, pixelRect, input, dt);
 	}
 
 	// background
