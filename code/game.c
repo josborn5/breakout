@@ -71,6 +71,34 @@ static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPos
 	return horFactor;
 }
 
+static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *input)
+{
+	GAME_RECT = (Rect) { X_DIM_BASE, Y_DIM_BASE, ((float)X_DIM_BASE / (float)Y_DIM_BASE) };
+	float worldHalfX = 0.5f * (float)X_DIM_BASE;
+	float worldHalfY = 0.5f * (float)Y_DIM_BASE;
+	worldHalfSize = (Vector2D){ worldHalfX, worldHalfY };
+	worldPosition = (Vector2D){ worldHalfX, worldHalfY };
+	
+	gamestate->balls[0].halfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
+	gamestate->player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
+
+	minPlayerX = 0.0f;
+	maxPlayerX = X_DIM_BASE;
+
+	gamestate->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+	gamestate->player.position.x = ClampFloat(minPlayerX, gamestate->player.position.x, maxPlayerX);
+	gamestate->player.position.y = 20;
+	gamestate->player.prevPosition.x = gamestate->player.position.x;
+	gamestate->player.prevPosition.y = gamestate->player.position.y;
+	gamestate->player.velocity.y = 0;
+	gamestate->player.velocity.x = 0;
+
+	gamestate->score = 0;
+	gamestate->lives = STARTING_LIVES;
+	gamestate->level = 1;
+	StartLevel(gamestate->level);
+}
+
 static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, float dt)
 {
 	gamestate->player.prevPosition.x = gamestate->player.position.x;
@@ -209,41 +237,51 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 	}
 }
 
+static void RenderGameState(RenderBuffer *renderBuffer, GameState *gamestate)
+{
+	// background
+	ClearScreenAndDrawRect(renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
+
+	// player
+	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, gamestate->player.halfSize, gamestate->player.position);
+
+	// blocks
+	allBlocksCleared = true;
+	for (Block *block = gamestate->blocks; block != gamestate->blocks + ArrayCount(gamestate->blocks); block++)
+	{
+		if (!block->exists) continue;
+
+		allBlocksCleared = false;
+		DrawRect(renderBuffer, GAME_RECT, block->color, block->halfSize, block->position);
+	}
+
+	// ball
+	DrawRect(renderBuffer, GAME_RECT, BALL_COLOR, gamestate->balls[0].halfSize, gamestate->balls[0].position);
+
+	// Balls, Level & Score
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", (Vector2D){ 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, gamestate->lives, (Vector2D){ 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", (Vector2D){ 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, gamestate->level, (Vector2D){ 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", (Vector2D){ 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, gamestate->score, (Vector2D){ 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+}
+
 static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 {
+	Rect pixelRect = (Rect) { renderBuffer.width, renderBuffer.height };
+
 	if (IsReleased(input, BUTTON_RESET))
 	{
 		initialized = false;
 	}
 
-	Rect pixelRect = (Rect) { renderBuffer.width, renderBuffer.height };
 	if (!initialized)
 	{
 		initialized = true;
-		GAME_RECT = (Rect) { X_DIM_BASE, Y_DIM_BASE, ((float)X_DIM_BASE / (float)Y_DIM_BASE) };
-		float worldHalfX = 0.5f * (float)X_DIM_BASE;
-		float worldHalfY = 0.5f * (float)Y_DIM_BASE;
-		worldHalfSize = (Vector2D){ worldHalfX, worldHalfY };
-		worldPosition = (Vector2D){ worldHalfX, worldHalfY };
-		
-		gamestate.balls[0].halfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
-		gamestate.player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
-
-		minPlayerX = 0.0f;
-		maxPlayerX = X_DIM_BASE;
-
-		gamestate.player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
-		gamestate.player.position.x = ClampFloat(minPlayerX, gamestate.player.position.x, maxPlayerX);
-		gamestate.player.position.y = 20;
-		gamestate.player.prevPosition.x = gamestate.player.position.x;
-		gamestate.player.prevPosition.y = gamestate.player.position.y;
-		gamestate.player.velocity.y = 0;
-		gamestate.player.velocity.x = 0;
-
-		gamestate.score = 0;
-		gamestate.lives = STARTING_LIVES;
-		gamestate.level = 1;
-		StartLevel(gamestate.level);
+		InitializeGameState(&gamestate, pixelRect, input);
 		return;
 	}
 
@@ -257,32 +295,5 @@ static void SimulateGame(Input *input, RenderBuffer renderBuffer, float dt)
 		UpdateGameState(&gamestate, pixelRect, input, dt);
 	}
 
-	// background
-	ClearScreenAndDrawRect(&renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
-
-	// player
-	DrawRect(&renderBuffer, GAME_RECT, BAT_COLOR, gamestate.player.halfSize, gamestate.player.position);
-
-	// blocks
-	allBlocksCleared = true;
-	for (Block *block = gamestate.blocks; block != gamestate.blocks + ArrayCount(gamestate.blocks); block++)
-	{
-		if (!block->exists) continue;
-
-		allBlocksCleared = false;
-		DrawRect(&renderBuffer, GAME_RECT, block->color, block->halfSize, block->position);
-	}
-
-	// ball
-	DrawRect(&renderBuffer, GAME_RECT, BALL_COLOR, gamestate.balls[0].halfSize, gamestate.balls[0].position);
-
-	// Balls, Level & Score
-	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "BALLS", (Vector2D){ 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(&renderBuffer, GAME_RECT, gamestate.lives, (Vector2D){ 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-
-	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "LEVEL", (Vector2D){ 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(&renderBuffer, GAME_RECT, gamestate.level, (Vector2D){ 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-
-	DrawAlphabetCharacters(&renderBuffer, GAME_RECT, "SCORE", (Vector2D){ 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(&renderBuffer, GAME_RECT, gamestate.score, (Vector2D){ 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	RenderGameState(&renderBuffer, &gamestate);
 }
