@@ -2,7 +2,7 @@
 #define GAME_H
 
 #define BLOCK_ARRAY_SIZE 64
-#define BALL_ARRY_SIZE 3
+#define BALL_ARRAY_SIZE 3
 
 struct {
 	Vector2D prevPosition;
@@ -16,6 +16,7 @@ struct {
 	Vector2D position;
 	Vector2D halfSize;
 	Vector2D velocity;
+	b32 exists;
 } typedef Ball;
 
 struct {
@@ -27,7 +28,7 @@ struct {
 
 struct {
 	Player player;
-	Ball balls[BALL_ARRY_SIZE];
+	Ball balls[BALL_ARRAY_SIZE];
 	Block blocks[BLOCK_ARRAY_SIZE];
 	int level;
 	int score;
