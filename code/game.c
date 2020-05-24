@@ -26,6 +26,10 @@ TODO (in no particular order):
 
 #define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
 #define BLOCK_AREA_POS (Vector2D){ 30.0f, 70.0f }
+#define BALL_HALF_SIZE (Vector2D){ 1.0f, 1.0f }
+#define POWER_UP_HALF_SIZE (Vector2D){ 0.5f, 0.5f }
+#define POWER_UP_VELOCITY (Vector2D){ 0.0f, -0.5f }
+#define ZERO_POSITION (Vector2D){ 0.0f, 0.0f }
 
 const float MIN_BALL_SPEED = 75.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
@@ -41,7 +45,6 @@ const int BLOCK_SCORE = 10;
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
 const float FONT_SIZE = 2.0f;
-const float BALL_SIZE = 1.0f;
 const float BAT_WIDTH = 10.0f;
 const float BAT_HEIGHT = 1.0f;
 
@@ -107,9 +110,25 @@ static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *inp
 
 	for (int i = 0; i < BALL_ARRAY_SIZE; i += 1)
 	{
-		gamestate->balls[i].halfSize = (Vector2D){ BALL_SIZE, BALL_SIZE };
+		gamestate->balls[i].halfSize = BALL_HALF_SIZE;
 	}
-	
+
+	for (int i = 0; i < POWER_UPS_SIZE; i += 1)
+	{
+		gamestate->powerUpsInEffect[i] = Nothing;
+	}
+
+	for (int i = 0; i < POWER_UPS_IN_EFFECT_SIZE; i += 1)
+	{
+		PowerUp powerUp = gamestate->powerUps[i];
+		powerUp.prevPosition = ZERO_POSITION;
+		powerUp.position = ZERO_POSITION;
+		powerUp.halfSize = POWER_UP_HALF_SIZE;
+		powerUp.velocity = POWER_UP_VELOCITY;
+		powerUp.type = Nothing;
+		powerUp.exists = false;
+	}
+
 	gamestate->player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 	minPlayerX = 0.0f;

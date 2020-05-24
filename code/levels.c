@@ -5,7 +5,7 @@ char *levels[10] = {
 "\
 000000000000\n\
 000000000000\n\
-000000000000",
+CMCMCMCMCMCM",
 
 "\
      00\n\
@@ -95,6 +95,18 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 				block->halfSize = blockHalfSize;
 				block->position = blockPosition;
 				block->color = MakeColorFromGrey(blockCount * 20);
+				switch (*blockLayoutForLevel)
+				{
+					case 'M':
+						block->powerUpType = Multiball;
+						break;
+					case 'C':
+						block->powerUpType = Comet;
+						break;
+					default:
+						block->powerUpType = Nothing;
+						break;
+				}
 
 				blockCount += 1;
 			}
