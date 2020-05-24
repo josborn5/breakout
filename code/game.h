@@ -4,7 +4,11 @@
 #define BLOCK_ARRAY_SIZE 64
 #define BALL_ARRAY_SIZE 3
 #define POWER_UPS_IN_EFFECT_SIZE 2
-#define POWER_UPS_SIZE 8
+
+#define ZERO_POSITION (Vector2D){ 0.0f, 0.0f }
+
+#define POWER_UP_HALF_SIZE (Vector2D){ 0.5f, 0.5f }
+#define POWER_UP_VELOCITY (Vector2D){ 0.0f, -5.0f }
 
 typedef enum PowerUpType
 {
@@ -19,7 +23,8 @@ struct {
 	Vector2D halfSize;
 	Vector2D velocity;
 	PowerUpType type;
-	b32 exists;
+	b32 exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection
+	uint32_t color;
 } typedef PowerUp;
 
 struct {
@@ -42,14 +47,13 @@ struct {
 	Vector2D halfSize;
 	uint32_t color;
 	b32 exists;
-	PowerUpType powerUpType;
+	PowerUp powerUp;
 } typedef Block;
 
 struct {
 	Player player;
 	Ball balls[BALL_ARRAY_SIZE];
 	Block blocks[BLOCK_ARRAY_SIZE];
-	PowerUp powerUps[POWER_UPS_SIZE];
 	PowerUpType powerUpsInEffect[POWER_UPS_IN_EFFECT_SIZE];
 	int level;
 	int score;

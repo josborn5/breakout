@@ -27,9 +27,6 @@ TODO (in no particular order):
 #define BLOCK_AREA (Vector2D){ 100.0f, 20.0f }
 #define BLOCK_AREA_POS (Vector2D){ 30.0f, 70.0f }
 #define BALL_HALF_SIZE (Vector2D){ 1.0f, 1.0f }
-#define POWER_UP_HALF_SIZE (Vector2D){ 0.5f, 0.5f }
-#define POWER_UP_VELOCITY (Vector2D){ 0.0f, -0.5f }
-#define ZERO_POSITION (Vector2D){ 0.0f, 0.0f }
 
 const float MIN_BALL_SPEED = 75.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
@@ -50,7 +47,9 @@ const float BAT_HEIGHT = 1.0f;
 
 Rect GAME_RECT;
 
+internal const int X_DIM_ORIGIN = 0;
 internal const int X_DIM_BASE = 160;
+internal const int Y_DIM_ORIGIN = 0;
 internal const int Y_DIM_BASE = 90;
 const int STARTING_LIVES = 3;
 
@@ -113,20 +112,9 @@ static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *inp
 		gamestate->balls[i].halfSize = BALL_HALF_SIZE;
 	}
 
-	for (int i = 0; i < POWER_UPS_SIZE; i += 1)
-	{
-		gamestate->powerUpsInEffect[i] = Nothing;
-	}
-
 	for (int i = 0; i < POWER_UPS_IN_EFFECT_SIZE; i += 1)
 	{
-		PowerUp powerUp = gamestate->powerUps[i];
-		powerUp.prevPosition = ZERO_POSITION;
-		powerUp.position = ZERO_POSITION;
-		powerUp.halfSize = POWER_UP_HALF_SIZE;
-		powerUp.velocity = POWER_UP_VELOCITY;
-		powerUp.type = Nothing;
-		powerUp.exists = false;
+		gamestate->powerUpsInEffect[i] = Nothing;
 	}
 
 	gamestate->player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
@@ -150,11 +138,13 @@ static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *inp
 
 static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, float dt)
 {
+	// Update player state
 	gamestate->player.prevPosition.x = gamestate->player.position.x;
 	gamestate->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
 	gamestate->player.position.x = ClampFloat(minPlayerX, gamestate->player.position.x, maxPlayerX);
 	gamestate->player.velocity.x = (gamestate->player.position.x - gamestate->player.prevPosition.x) / dt;
 
+	// Update ball & block state
 	for (int i = 0; i < BALL_ARRAY_SIZE; i += 1)
 	{
 		if (!gamestate->balls[i].exists) continue;
@@ -174,7 +164,7 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 			gamestate->balls[i].position = AddVector2D(gamestate->balls[i].prevPosition, MultiplyVector2D(gamestate->balls[i].velocity, t1 - t0));
 
 			// Check for collision between any boundary of the world
-			CheckBlockAndTopsideOfWallCollision(0, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
+			CheckBlockAndTopsideOfWallCollision(Y_DIM_ORIGIN, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
 			if (ballCollisionResult != None)
 			{
 				gamestate->balls[i].exists = false;
@@ -206,7 +196,7 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 			}
 
 			CheckBlockAndUndersideOfWallCollision(Y_DIM_BASE, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
-			CheckBlockAndLeftWallCollision(0, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
+			CheckBlockAndLeftWallCollision(X_DIM_ORIGIN, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
 			CheckBlockAndRightWallCollision(X_DIM_BASE, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
 
 			int blockHitIndex = -1;
@@ -276,6 +266,12 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 					// speed up the ball a little
 					gamestate->balls[i].velocity.x *= 1.2f;
 					gamestate->balls[i].velocity.y *= 1.2f;
+
+					// Check for powerup
+					if (block->powerUp.type != Nothing)
+					{
+						block->powerUp.exists = true;
+					}
 				}
 			}
 			collisionCheckCount += 1;
@@ -298,6 +294,34 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 		gamestate->balls[i].position.y = ClampFloat(0 + gamestate->balls[i].halfSize.y, gamestate->balls[i].position.y, Y_DIM_BASE - gamestate->balls[i].halfSize.y);
 
 	}
+
+	// Update power up state
+	for (Block *block = gamestate->blocks; block != gamestate->blocks + ArrayCount(gamestate->blocks); block++)
+	{
+		if (!block->powerUp.exists) continue;
+
+		block->powerUp.prevPosition = block->powerUp.position;
+		block->powerUp.position = AddVector2D(block->powerUp.prevPosition, MultiplyVector2D(block->powerUp.velocity, dt));
+
+		// Can get away with a super simple position check for the power up falling off screen here
+		if (block->powerUp.position.y < Y_DIM_ORIGIN)
+		{
+			block->powerUp.exists = false;
+		}
+		else
+		{
+			float minCollisionTime = dt;
+			int ballCollisionResult = None;
+			CheckCollisionBetweenMovingObjects(gamestate->player.halfSize, gamestate->player.prevPosition, gamestate->player.velocity, block->powerUp.halfSize, block->powerUp.prevPosition, block->powerUp.velocity, &minCollisionTime, &ballCollisionResult, &block->powerUp.position);
+			if (ballCollisionResult != None)
+			{
+				block->powerUp.exists = false;
+
+				// TODO: apply power up effect
+			}
+		}
+	}
+
 	if (allBlocksCleared && (GetVectorMagnitude(gamestate->balls[0].velocity) < LEVEL_CHANGE_BALL_SPEED))
 	{
 		gamestate->level += 1;
@@ -329,6 +353,14 @@ static void RenderGameState(RenderBuffer *renderBuffer, GameState *gamestate)
 		if (!gamestate->balls[i].exists) continue;
 
 		DrawRect(renderBuffer, GAME_RECT, BALL_COLOR, gamestate->balls[i].halfSize, gamestate->balls[i].position);
+	}
+
+	// power ups
+	for (Block *block = gamestate->blocks; block != gamestate->blocks + ArrayCount(gamestate->blocks); block++)
+	{
+		if (!block->powerUp.exists) continue;
+
+		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, block->powerUp.position);
 	}
 
 	// Balls, Level & Score

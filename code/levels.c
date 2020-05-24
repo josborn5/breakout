@@ -98,13 +98,31 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 				switch (*blockLayoutForLevel)
 				{
 					case 'M':
-						block->powerUpType = Multiball;
+						block->powerUp.type = Multiball;
+						block->powerUp.prevPosition = block->position;
+						block->powerUp.position = block->position;
+						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
+						block->powerUp.velocity = POWER_UP_VELOCITY;
+						block->powerUp.exists = false;
+						block->powerUp.color = 0xFF0000;
 						break;
 					case 'C':
-						block->powerUpType = Comet;
+						block->powerUp.type = Comet;
+						block->powerUp.prevPosition = block->position;
+						block->powerUp.position = block->position;
+						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
+						block->powerUp.velocity = POWER_UP_VELOCITY;
+						block->powerUp.exists = false;
+						block->powerUp.color = 0xFFFF00;
 						break;
 					default:
-						block->powerUpType = Nothing;
+						block->powerUp.type = Nothing;
+						block->powerUp.prevPosition = ZERO_POSITION;
+						block->powerUp.position = ZERO_POSITION;
+						block->powerUp.halfSize = ZERO_POSITION;
+						block->powerUp.velocity = ZERO_POSITION;
+						block->powerUp.exists = false;
+						block->powerUp.color = 0x000000;
 						break;
 				}
 
