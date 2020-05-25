@@ -329,7 +329,23 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 						gamestate->isCometActive = true;
 						break;
 					case Multiball:
-						// TODO fill up any non-existing balls in the balls array
+						// get the first ball that exists
+						Ball* existingBall = gamestate->balls;
+						while (!existingBall->exists)
+						{
+							existingBall++;
+						}
+
+						for (int j = 0; j < BALL_ARRAY_SIZE; j += 1)
+						{
+							Ball* ball = &gamestate->balls[j];
+							if (ball->exists) continue;
+
+							ball->exists = true;
+							ball->position = existingBall->position;
+							ball->velocity.y = existingBall->velocity.y;
+							ball->velocity.x = existingBall->velocity.x + (j * 10.0f);
+						}
 						break;
 				}
 			}

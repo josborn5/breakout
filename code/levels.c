@@ -5,19 +5,19 @@ char *levels[10] = {
 "\
 000000000000\n\
 000000000000\n\
-CMCMCMCMCMCM",
+MMMMMMMMMMMM",
 
 "\
      00\n\
     0000\n\
   00000000\n\
-000000000000",
+CCCCCCCCCCCC",
 
 "\
 000000000000\n\
-  00000000\n\
+  00C00C00\n\
     0000\n\
-     00"
+     MM"
 };
 
 static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, Vector2D blockArea, Vector2D blockAreaPosition)
