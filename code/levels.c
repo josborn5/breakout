@@ -117,10 +117,10 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						break;
 					default:
 						block->powerUp.type = Nothing;
-						block->powerUp.prevPosition = ZERO_POSITION;
-						block->powerUp.position = ZERO_POSITION;
-						block->powerUp.halfSize = ZERO_POSITION;
-						block->powerUp.velocity = ZERO_POSITION;
+						block->powerUp.prevPosition = ZERO_VECTOR;
+						block->powerUp.position = ZERO_VECTOR;
+						block->powerUp.halfSize = ZERO_VECTOR;
+						block->powerUp.velocity = ZERO_VECTOR;
 						block->powerUp.exists = false;
 						block->powerUp.color = 0x000000;
 						break;

@@ -3,9 +3,8 @@
 
 #define BLOCK_ARRAY_SIZE 64
 #define BALL_ARRAY_SIZE 3
-#define POWER_UPS_IN_EFFECT_SIZE 2
 
-#define ZERO_POSITION (Vector2D){ 0.0f, 0.0f }
+#define ZERO_VECTOR (Vector2D){ 0.0f, 0.0f }
 
 #define POWER_UP_HALF_SIZE (Vector2D){ 0.5f, 0.5f }
 #define POWER_UP_VELOCITY (Vector2D){ 0.0f, -5.0f }
@@ -54,7 +53,7 @@ struct {
 	Player player;
 	Ball balls[BALL_ARRAY_SIZE];
 	Block blocks[BLOCK_ARRAY_SIZE];
-	PowerUpType powerUpsInEffect[POWER_UPS_IN_EFFECT_SIZE];
+	b32 isCometActive;
 	int level;
 	int score;
 	int lives;

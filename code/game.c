@@ -2,7 +2,8 @@
 
 TODO (in no particular order):
 
--- Power ups.
+-- Multi-ball power up
+-- Visual effects for power ups
 
 -- Clean up the ball speed slow down logic. We're doing a lot of operations here that I think could be simplified.
 
@@ -17,6 +18,8 @@ TODO (in no particular order):
 -- Intro screen and inter-level screen
 
 -- Sound! Check out the JavidX9 youtube videos for some ideas on how to implement this.
+
+-- More levels!
 
 */
 
@@ -38,6 +41,7 @@ const uint32_t BLOCK_COLOR = 0xFFFF00;
 const uint32_t TEXT_COLOR = 0xFFFF00;
 
 const int BLOCK_SCORE = 10;
+const int NO_BLOCK_HIT_INDEX = -1;
 
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
@@ -84,6 +88,8 @@ static void StartLevel(char newLevel)
 {
 	allBlocksCleared = false;
 
+	gamestate.isCometActive = false;
+
 	ResetBalls();
 
 	PopulateBlocksForLevel(newLevel, gamestate.blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
@@ -112,11 +118,6 @@ static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *inp
 		gamestate->balls[i].halfSize = BALL_HALF_SIZE;
 	}
 
-	for (int i = 0; i < POWER_UPS_IN_EFFECT_SIZE; i += 1)
-	{
-		gamestate->powerUpsInEffect[i] = Nothing;
-	}
-
 	gamestate->player.halfSize = (Vector2D){ BAT_WIDTH, BAT_HEIGHT };
 
 	minPlayerX = 0.0f;
@@ -125,10 +126,8 @@ static void InitializeGameState(GameState *gamestate, Rect pixelRect, Input *inp
 	gamestate->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
 	gamestate->player.position.x = ClampFloat(minPlayerX, gamestate->player.position.x, maxPlayerX);
 	gamestate->player.position.y = 20;
-	gamestate->player.prevPosition.x = gamestate->player.position.x;
-	gamestate->player.prevPosition.y = gamestate->player.position.y;
-	gamestate->player.velocity.y = 0;
-	gamestate->player.velocity.x = 0;
+	gamestate->player.prevPosition = gamestate->player.position;
+	gamestate->player.velocity = ZERO_VECTOR;
 
 	gamestate->score = 0;
 	gamestate->lives = STARTING_LIVES;
@@ -199,7 +198,7 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 			CheckBlockAndLeftWallCollision(X_DIM_ORIGIN, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
 			CheckBlockAndRightWallCollision(X_DIM_BASE, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
 
-			int blockHitIndex = -1;
+			int blockHitIndex = NO_BLOCK_HIT_INDEX;
 
 			// check for collision between ball and blocks
 			for (int j = 0; j < ArrayCount(gamestate->blocks); j += 1)
@@ -217,13 +216,17 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 			// Check for collision between ball and bat
 			Player player = gamestate->player;
 			b32 playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, gamestate->balls[i].halfSize, gamestate->balls[i].prevPosition, gamestate->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &gamestate->balls[i].position);
+			b32 blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
 
 			checkCollision = (ballCollisionResult != None);
 			if (checkCollision)
 			{
 				if (ballCollisionResult == Top || ballCollisionResult == Bottom)
 				{
-					gamestate->balls[i].velocity.y *= -1.0f;
+					if (!blockCollision || !gamestate->isCometActive)
+					{
+						gamestate->balls[i].velocity.y *= -1.0f;
+					}
 
 					if (playerCollision && ballCollisionResult == Top)
 					{
@@ -249,9 +252,12 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 							gamestate->balls[i].velocity.x = MaxFloat(ballVelocityX, player.velocity.x);
 						}
 					}
-					else // collision with block
+					else // collision with block or wall
 					{
-						gamestate->balls[i].velocity.x *= -1.0f;
+						if (!blockCollision || !gamestate->isCometActive)
+						{
+							gamestate->balls[i].velocity.x *= -1.0f;
+						}
 					}
 				}
 				t0 = minCollisionTime;		// Update t0 so next ball position calculation starts from the collision time
@@ -317,7 +323,15 @@ static void UpdateGameState(GameState *gamestate, Rect pixelRect, Input *input, 
 			{
 				block->powerUp.exists = false;
 
-				// TODO: apply power up effect
+				switch (block->powerUp.type)
+				{
+					case Comet:
+						gamestate->isCometActive = true;
+						break;
+					case Multiball:
+						// TODO fill up any non-existing balls in the balls array
+						break;
+				}
 			}
 		}
 	}
