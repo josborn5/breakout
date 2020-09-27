@@ -39,7 +39,9 @@ internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x
 internal void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	Rect pixelRect = (Rect) { renderBuffer->width, renderBuffer->height };
+	Rect pixelRect = {0};
+	pixelRect.x = renderBuffer->width;
+	pixelRect.y = renderBuffer->height;
 	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
@@ -48,7 +50,9 @@ internal void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color
 internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	Rect pixelRect = (Rect) { renderBuffer->width, renderBuffer->height };
+	Rect pixelRect = {0};
+	pixelRect.x = renderBuffer->width;
+	pixelRect.y = renderBuffer->height;
 	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	// draw the given rectangle
@@ -67,7 +71,9 @@ static void DrawSprite(RenderBuffer* renderBuffer, Rect gameRect, char *sprite, 
 	float originalY = p.y;
 
 	float blockSize = blockHalfSize * 2.0f;
-	Vector2D blockHalf = (Vector2D){ blockHalfSize, blockHalfSize };
+	Vector2D blockHalf;
+	blockHalf.x = blockHalfSize;
+	blockHalf.y = blockHalfSize;
 
 	while (*sprite)
 	{

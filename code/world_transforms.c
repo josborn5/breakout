@@ -10,8 +10,6 @@ Vector2D TransformPixelCoordToGameCoord(Rect pixelRect, Rect gameRect, int x, in
 {
 	float mX;
 	float mY;
-	float cX;
-	float cY;
 
 	// Check the aspect ratio of the render buffer
 	float pixelAspectRatio = (float)pixelRect.x / (float)pixelRect.y;
@@ -35,7 +33,7 @@ Vector2D TransformPixelCoordToGameCoord(Rect pixelRect, Rect gameRect, int x, in
 
 	float horizontalOffset = 0.0f;
 	float verticalOffset = 0.0f;
-	Vector2D transformed = {0};
+	Vector2D transformed;
 	transformed.x = (x - horizontalOffset) * mX;
 	transformed.y = (y - verticalOffset) * mY;
 
@@ -46,8 +44,6 @@ Rect TransformGameCoordToPixelCoord(Rect pixelRect, Rect gameRect, float x, floa
 {
 	float mX;
 	float mY;
-	float cX;
-	float cY;
 
 	// Check the aspect ratio of the render buffer
 	float pixelAspectRatio = (float)pixelRect.x / (float)pixelRect.y;

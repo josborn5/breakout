@@ -73,7 +73,9 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 	// Calculate the block size from the row & column counts
 	float blockHeight = blockArea.y / (float)rowCount;
 	float blockWidth = blockArea.x / (float)columnCount;
-	Vector2D blockHalfSize = (Vector2D){ 0.5f * blockWidth, 0.5f * blockHeight };
+	Vector2D blockHalfSize;
+	blockHalfSize.x = 0.5f * blockWidth;
+	blockHalfSize.y = 0.5f * blockHeight;
 
 	int blockCount = 0;
 	Vector2D blockPosition = blockAreaPosition;
@@ -94,7 +96,7 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 				block->exists = 1;
 				block->halfSize = blockHalfSize;
 				block->position = blockPosition;
-				block->color = MakeColorFromGrey(blockCount * 20);
+				block->color = MakeColorFromGrey((uint8_t)(blockCount * 20));
 				switch (*blockLayoutForLevel)
 				{
 					case 'M':

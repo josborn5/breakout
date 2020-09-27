@@ -1,6 +1,13 @@
 #include "utils.h"
 #include "math.h"
 
+static b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
+{
+	b32 verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
+	b32 horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
+	return verticalCollision && horizontalCollision;
+}
+
 static b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
 {
 	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
@@ -17,13 +24,6 @@ static b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D b
 	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
 
 	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
-}
-
-static b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
-{
-	b32 verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
-	b32 horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
-	return verticalCollision && horizontalCollision;
 }
 
 static b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
@@ -61,7 +61,8 @@ static void CheckBlockAndUndersideOfWallCollision(
 		*maxCollisionTime = tCollision;
 		*blockResult = Bottom;
 		float xCollisionPos = prevBallPosition.x + (tCollision * ballVelocity.x);
-		*ballPosition = (Vector2D) {xCollisionPos, yCollisionCheckPos};
+		ballPosition->x = xCollisionPos;
+		ballPosition->y = yCollisionCheckPos;
 	}
 }
 
@@ -86,7 +87,8 @@ static void CheckBlockAndTopsideOfWallCollision(
 		*maxCollisionTime = tCollision;
 		*blockResult = Top;
 		float xCollisionPos = prevBallPosition.x + (tCollision * ballVelocity.x);
-		*ballPosition = (Vector2D) {xCollisionPos, yCollisionCheckPos};
+		ballPosition->x = xCollisionPos;
+		ballPosition->y = yCollisionCheckPos;
 	}
 }
 
@@ -111,7 +113,8 @@ static void CheckBlockAndLeftWallCollision(
 		*maxCollisionTime = tCollision;
 		*blockResult = Right;
 		float yCollisionPos = prevBallPosition.y + (tCollision * ballVelocity.y);
-		*ballPosition = (Vector2D) { xCollisionCheckPos, yCollisionPos };
+		ballPosition->x = xCollisionCheckPos;
+		ballPosition->y = yCollisionPos;
 	}
 }
 
@@ -136,7 +139,8 @@ static void CheckBlockAndRightWallCollision(
 		*maxCollisionTime = tCollision;
 		*blockResult = Left;
 		float yCollisionPos = prevBallPosition.y + (tCollision * ballVelocity.y);
-		*ballPosition = (Vector2D) {xCollisionCheckPos, yCollisionPos};
+		ballPosition->x = xCollisionCheckPos;
+		ballPosition->y = yCollisionPos;
 	}
 }
 
@@ -160,7 +164,7 @@ static b32 CheckBlockAndBallCollision(
 	// Check for collision between block side and ball path
 	// 1. Top/bottom side
 	int horizontalCollisionResult = None;
-	float yCollisionCheckPos;
+	float yCollisionCheckPos = 0.0f;
 	if (ballVelocity.y > 0)
 	{
 		yCollisionCheckPos = blockBottomSide;
@@ -183,15 +187,15 @@ static b32 CheckBlockAndBallCollision(
 				*maxCollisionTime = tYCollision;
 				*blockResult = horizontalCollisionResult;
 				collided = true;
-				*ballPosition = (Vector2D) { ballXPosAtCollision, yCollisionCheckPos };
+				ballPosition->x = ballXPosAtCollision;
+				ballPosition->y = yCollisionCheckPos;
 			}
 		}
 	}
 
 	// 2. Left/right side, 
-	float tVerticalCollision = -1.0f;
 	int verticalCollisionResult = None;
-	float xCollisionCheckPos;
+	float xCollisionCheckPos = 0.0f;
 	if (ballVelocity.x > 0)
 	{
 		xCollisionCheckPos = blockLeftSide;
@@ -214,7 +218,8 @@ static b32 CheckBlockAndBallCollision(
 				*maxCollisionTime = tXCollision;
 				*blockResult = verticalCollisionResult;
 				collided = true;
-				*ballPosition = (Vector2D) { xCollisionCheckPos, ballYPosAtCollision };
+				ballPosition->x = xCollisionCheckPos;
+				ballPosition->y = ballYPosAtCollision;
 			}
 		}
 	}

@@ -1,5 +1,11 @@
-#include <stdint.h>
+#ifndef WIN32_PLATFORM_H
+#define WIN32_PLATFORM_H
+
 #include <windows.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <dsound.h>
+#include <math.h>
 
 #include "platform.h"
 #include "utils.h"
@@ -11,164 +17,340 @@
 #include "levels.c"
 #include "game.c"
 
-global_variable b32 isRunning = true;
-global_variable b32 showRectangle = false;
-global_variable RenderBuffer renderBuffer;	// platform independent
-global_variable BITMAPINFO bitmapInfo;	// platform dependent
+#define DEBUG_BUFFER_SIZE 256
 
-internal LRESULT windowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+/**
+ * FLAG_SLOW
+ * 0 - No slow code allowed
+ * 1 - Slow code welcome
+ */
+#if FLAG_SLOW
+	#define Assert(expression) if (!(expression)) { *(int*)0 = 0; }
+#else
+	#define Assert(expression)
+#endif
+#define Kilobytes(value) ((value) * 1024LL)
+#define Megabytes(value) (Kilobytes(value) * 1024LL)
+#define Gigabytes(value) (Megabytes(value) * 1024LL)
+#define Terabytes(value) (Gigabytes(value) * 1024LL)
+
+static b32 IsRunning = false;
+static RenderBuffer renderBuffer = {0};
+static BITMAPINFO bitmapInfo = {0};	// platform dependent
+static LPDIRECTSOUNDBUFFER GlobalSoundBuffer = {0};
+static int64_t GlobalPerfCountFrequency;
+
+static void Win32_SizeRenderBufferToCurrentWindow(HWND window)
 {
-	LRESULT result = 0;
-	
-	switch(message)
+	RECT clientRect = {0};
+	GetClientRect(window, &clientRect);
+
+	renderBuffer.width = clientRect.right - clientRect.left;
+	renderBuffer.height = clientRect.bottom - clientRect.top;
+	renderBuffer.bytesPerPixel = 4;
+
+	if(renderBuffer.pixels)
 	{
-		case WM_CLOSE:
-		case WM_DESTROY:
-		{
-			isRunning = false;
-			break;
-		}
-
-		case WM_SIZE:
-		{
-			// Get the width & height of the window
-			RECT rect;
-			GetWindowRect(hWnd, &rect);
-			renderBuffer.width = rect.right - rect.left;
-			renderBuffer.height = rect.bottom - rect.top;
-
-			// Allocate memory for the current window size
-			if (renderBuffer.pixels)
-			{
-				VirtualFree(renderBuffer.pixels, 0, MEM_RELEASE);
-			}
-			renderBuffer.pixels = VirtualAlloc(0, sizeof(uint32_t) * renderBuffer.width * renderBuffer.height, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-
-			// Fill the bitmap info
-			bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-			bitmapInfo.bmiHeader.biWidth = renderBuffer.width;
-			bitmapInfo.bmiHeader.biHeight = renderBuffer.height;
-			bitmapInfo.bmiHeader.biPlanes = 1;
-			bitmapInfo.bmiHeader.biBitCount = 32;
-			bitmapInfo.bmiHeader.biCompression = BI_RGB;
-			break;
-		}
-
-		default:
-		{
-			result = DefWindowProcA(hWnd, message, wParam, lParam);
-		}
+		VirtualFree(renderBuffer.pixels, 0, MEM_RELEASE);
 	}
-	return result;
+
+	bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
+	bitmapInfo.bmiHeader.biWidth = renderBuffer.width;
+	bitmapInfo.bmiHeader.biHeight = renderBuffer.height;
+	bitmapInfo.bmiHeader.biPlanes = 1;
+	bitmapInfo.bmiHeader.biBitCount = 32;
+	bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+	int bitmapMemorySize = (renderBuffer.width * renderBuffer.height) * renderBuffer.bytesPerPixel;
+	renderBuffer.pitch = renderBuffer.width * renderBuffer.bytesPerPixel;
+	renderBuffer.pixels = VirtualAlloc(0, bitmapMemorySize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 }
 
-internal void ProcessButton(int vkCode, b32 isDown, b32 wasDown, Button *button, int vkButton)
+static void Win32_DisplayRenderBufferInWindow(HDC deviceContext)
+{
+	StretchDIBits(deviceContext,
+		0, 0, renderBuffer.width, renderBuffer.height,
+		0, 0, renderBuffer.width, renderBuffer.height,
+		renderBuffer.pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+}
+
+LRESULT CALLBACK Win32_MainWindowCallback(HWND window, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	LRESULT Result = -1;
+
+	switch(Message)
+	{
+		case WM_SIZE:
+		{
+			Win32_SizeRenderBufferToCurrentWindow(window);
+		} break;
+		case WM_DESTROY:
+		{
+			IsRunning = false;
+		} break;
+		case WM_CLOSE:
+		{
+			IsRunning = false;
+		} break;
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		{
+			Assert(!"NOOOOOOOO");
+		} break;
+		case WM_PAINT:
+		{
+			PAINTSTRUCT paint = {0};
+			HDC deviceContext = BeginPaint(window, &paint);
+			Win32_DisplayRenderBufferInWindow(deviceContext);
+			EndPaint(window, &paint);
+		} break;
+		default:
+		{
+			// use windows default callback handler
+			Result = DefWindowProc(window, Message, wParam, lParam);
+		} break;
+	}
+
+	return Result;
+}
+
+static void Win32_ProcessKeyboardMessage(Button* gameButton, int isDown, int wasDown, int vkCode, int vkButton)
 {
 	if (vkCode == vkButton)
 	{
-		button->isDown = isDown;
-		button->wasDown = wasDown;
-		button->keyUp = (!isDown && wasDown);
+		Assert(gameButton->endedDown != (int)isDown);
+		gameButton->endedDown = isDown;
+		++gameButton->halfTransitionCount;
+
+		gameButton->isDown = isDown;
+		gameButton->wasDown = wasDown;
+		gameButton->keyUp = (!isDown && wasDown);
 	}
 }
 
-internal void ResetButtons(Input *input)
+static void ResetButtons(Input *gameInput)
 {
 	for (int i = 0; i < BUTTON_COUNT; i += 1)
 	{
-		if (input->buttons[i].keyUp)
+		if (gameInput->buttons[i].keyUp)
 		{
-			input->buttons[i].wasDown = false;
-			input->buttons[i].keyUp = false;
+			gameInput->buttons[i].wasDown = false;
+			gameInput->buttons[i].keyUp = false;
 		}
 	}
 }
 
-int WinMain(HINSTANCE instance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+static void Win32_ProcessPendingMessages(Input* input)
 {
+	// flush the queue of Messages from windows in this loop
+	MSG Message;
+	while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
+	{
+		if(Message.message == WM_QUIT)
+		{
+			IsRunning = false;
+		}
+
+		switch(Message.message)
+		{
+			case WM_SYSKEYDOWN:
+			case WM_SYSKEYUP:
+			case WM_KEYDOWN:
+			case WM_KEYUP:
+			{
+				uint32_t vKCode = (uint32_t)Message.wParam;
+				b32 wasDown = ((Message.lParam & (1 << 30)) != 0); // Bit #30 of the LParam tells us what the previous key was
+				b32 isDown = ((Message.lParam & (1 << 31)) == 0); // Bit #31 of the LParam tells us what the current key is
+				if (wasDown != isDown)
+				{
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_UP], isDown, wasDown, vKCode, 'W');
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_UP], isDown, wasDown, vKCode, VK_UP);
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_DOWN], isDown, wasDown, vKCode, 'S');
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_DOWN], isDown, wasDown, vKCode, VK_DOWN);
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_LEFT], isDown, wasDown, vKCode, 'A');
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_LEFT], isDown, wasDown, vKCode, VK_LEFT);
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RIGHT], isDown, wasDown, vKCode, 'D');
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RIGHT], isDown, wasDown, vKCode, VK_RIGHT);
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_PAUSE], isDown, wasDown, vKCode, VK_SPACE);
+					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RESET], isDown, wasDown, vKCode, 'R');
+				}
+
+				b32 altKeyDown = ((Message.lParam & (1 << 29)) != 0);
+				if((vKCode == VK_F4) && altKeyDown)
+				{
+					IsRunning = false;
+				}
+			} break;
+			default: {
+				TranslateMessage(&Message);
+				DispatchMessage(&Message);
+			} break;
+
+		}
+	}
+}
+
+void DisplayLastWin32Error()
+{
+	DWORD ErrorCode = GetLastError();
+	char ErrorCodeBuffer[256];
+	wsprintf(ErrorCodeBuffer, "VirtualAlloc error code: %d\n", ErrorCode);
+}
+
+inline LARGE_INTEGER Win32_GetWallClock()
+{
+	LARGE_INTEGER Result;
+	QueryPerformanceCounter(&Result);
+	return Result;
+}
+
+inline float Win32_GetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End)
+{
+	uint64_t CounterElapsed = End.QuadPart - Start.QuadPart;
+	float SecondsElapsedForWork = ((float)CounterElapsed / (float)GlobalPerfCountFrequency);
+	return SecondsElapsedForWork;
+}
+
+int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR commandLine, int showCode)
+{
+	LARGE_INTEGER PerfCounterFrequencyResult;
+	QueryPerformanceFrequency(&PerfCounterFrequencyResult);
+	GlobalPerfCountFrequency = PerfCounterFrequencyResult.QuadPart;
+
+	// Set the Windows schedular granularity to 1ms to help our Sleep() function call be granular
+	UINT DesiredSchedulerMS = 1;
+	MMRESULT setSchedularGranularityResult = timeBeginPeriod(DesiredSchedulerMS);
+	b32 SleepIsGranular = (setSchedularGranularityResult == TIMERR_NOERROR);
+
 	WNDCLASSA windowClass = {0};
-	windowClass.style = CS_HREDRAW|CS_VREDRAW;
-	windowClass.lpszClassName = "Game window class";
-	windowClass.lpfnWndProc = windowCallback;
+	windowClass.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
+	windowClass.lpfnWndProc = Win32_MainWindowCallback;
+	windowClass.hInstance = instance;
+	windowClass.lpszClassName = "Window Class";
 
-	RegisterClassA(&windowClass);
+	const int GameUpdateHz = 30;
+	float targetSecondsPerFrame = 1.0f / (float)GameUpdateHz;
 
-	HWND window = CreateWindowExA(0, windowClass.lpszClassName, "Breakout Clone",
+	if(RegisterClassA(&windowClass))
+	{
+		HWND window = CreateWindowExA(0, windowClass.lpszClassName, "Breakout Clone",
 									WS_VISIBLE|WS_OVERLAPPEDWINDOW,
 									CW_USEDEFAULT, CW_USEDEFAULT,
 									1280, 720, 0, 0, 0, 0);
-	HDC hdc = GetDC(window);
-	Input input = {0};
-	LARGE_INTEGER lastCounter;
-	QueryPerformanceCounter(&lastCounter);
-
-	LARGE_INTEGER performanceFrequencyLargeInt;
-	QueryPerformanceFrequency(&performanceFrequencyLargeInt);
-	float frequencyCounter = (float)performanceFrequencyLargeInt.QuadPart;
-	float lastDt = 0.01666f;
-
-	while(isRunning)
-	{
-		// input
-		MSG message;
-		while(PeekMessageA(&message, window, 0, 0, PM_REMOVE))
+		if(window)
 		{
-			switch(message.message)
+			IsRunning = true;
+
+			// Initialize Visual
+			Win32_SizeRenderBufferToCurrentWindow(window);
+
+			// Initialize general use memory
+			
+			GameMemory GameMemory;
+			GameMemory.PermanentStorageSpace = Megabytes(1);
+			GameMemory.TransientStorageSpace = Megabytes((uint64_t)1);
+
+			uint64_t totalStorageSpace = GameMemory.PermanentStorageSpace + GameMemory.TransientStorageSpace;
+			b32 successfulMemoryAllocation = true;
+			GameMemory.PermanentStorage = VirtualAlloc(0, (size_t)totalStorageSpace, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+			if(GameMemory.PermanentStorage == NULL)
 			{
-				case WM_SYSKEYDOWN:
-				case WM_SYSKEYUP:
-				case WM_KEYDOWN:
-				case WM_KEYUP:
+				successfulMemoryAllocation = false;
+				DisplayLastWin32Error();
+			}
+
+			GameMemory.TransientStorage = (uint8_t*)GameMemory.PermanentStorage + GameMemory.PermanentStorageSpace;
+
+			// Initialize input state
+			Input gameInput = {0};
+
+			// Initialize timers
+			float lastDt = targetSecondsPerFrame;
+			LARGE_INTEGER LastCounter = Win32_GetWallClock();
+			int64_t LastCycleCount = __rdtsc();
+
+			// Main loop
+			while (successfulMemoryAllocation && IsRunning)
+			{
+				Win32_ProcessPendingMessages(&gameInput);
+
+				// Get mouse position
+				POINT mousePointer;
+				GetCursorPos(&mousePointer);	// mousePointer in screen coord
+				ScreenToClient(window, &mousePointer);	// convert screen coord to window coord
+				gameInput.mouse.x = mousePointer.x;
+				gameInput.mouse.y = renderBuffer.height - mousePointer.y;
+
+
+				GameUpdateAndRender(&GameMemory, &gameInput, &renderBuffer, lastDt);
+
+
+				ResetButtons(&gameInput);
+
+				// render visual
+				HDC deviceContext = GetDC(window);
+				Win32_DisplayRenderBufferInWindow(deviceContext);
+				ReleaseDC(window, deviceContext);
+
+				// wait before starting next frame
+				float secondsElapsedForFrame = Win32_GetSecondsElapsed(LastCounter, Win32_GetWallClock());
+				float workTime = 1000.0f * secondsElapsedForFrame;
+				if (secondsElapsedForFrame < targetSecondsPerFrame)
 				{
-					uint32_t vkCode = (uint32_t)message.wParam;
-					b32 wasDown = ((message.lParam & (1 << 30)) != 0);	// message.lParam is 1 for KEYUP and 1 or 0 for KEYDOWN. i.e. 1 means was pressed, 0 means was not pressed
-					b32 isDown = ((message.lParam & (1 << 31)) == 0);	// message.lParam is always 0 for KEYDOWN & 1 for KEYUP. i.e. 0 means is pressed, 1 means is not pressed
-
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_LEFT], VK_LEFT);
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_RIGHT], VK_RIGHT);
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_UP], VK_UP);
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_DOWN], VK_DOWN);
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_PAUSE], VK_SPACE);
-					ProcessButton(vkCode, isDown, wasDown, &input.buttons[BUTTON_RESET], 0x52); // 'R' key
-
-					break;
+					if (SleepIsGranular)
+					{
+						DWORD SleepMS = (DWORD)(1000.0f * (targetSecondsPerFrame - secondsElapsedForFrame));
+						if (SleepMS > 0)
+						{
+							Sleep(SleepMS);
+						}
+					}
+					while(secondsElapsedForFrame < targetSecondsPerFrame)
+					{
+						secondsElapsedForFrame = Win32_GetSecondsElapsed(LastCounter, Win32_GetWallClock());
+					}
+				}
+				else
+				{
+					// TODO MISSED FRAME RATE
 				}
 
-				default:
-				{
-					TranslateMessage(&message);
-					DispatchMessage(&message);
-				}
+				// Take end of frame measurements
+				LARGE_INTEGER EndCounter = Win32_GetWallClock();
+				int64_t EndCycleCount = __rdtsc();
+
+				// Work out elapsed time for current frame
+				lastDt = Win32_GetSecondsElapsed(LastCounter, EndCounter);
+
+				// Output frame tine information
+				uint64_t counterElapsed = LastCounter.QuadPart - EndCounter.QuadPart;
+				double FPS = (double)GlobalPerfCountFrequency / (double)counterElapsed;
+				int64_t CyclesElapsed = EndCycleCount - LastCycleCount;
+				double MCPF = (double)CyclesElapsed / (1000.0f * 1000.0f);
+
+				char buffer[DEBUG_BUFFER_SIZE];
+				float msPerFrame = 1000.0f * lastDt;
+				sprintf_s(buffer, DEBUG_BUFFER_SIZE, "%.02f ms, %.02f ms/f,  %.02f f/s,  %.02f MC/f\n", workTime, msPerFrame, FPS, MCPF);
+				OutputDebugStringA(buffer);
+
+				// Reset measurementsfor next frame
+				LastCounter = EndCounter;
+				LastCycleCount = EndCycleCount;
 			}
 		}
-
-		// Get mouse position
-		POINT mousePointer;
-		GetCursorPos(&mousePointer);	// mousePointer in screen coord
-		ScreenToClient(window, &mousePointer);	// convert screen coord to window coord
-		input.mouse.x = mousePointer.x;
-		input.mouse.y = renderBuffer.height - mousePointer.y;
-
-		// simulation
-		SimulateGame(&input, renderBuffer, lastDt);
-
-		ResetButtons(&input);
-
-		// render
-		StretchDIBits(hdc,
-			0, 0, renderBuffer.width, renderBuffer.height,
-			0, 0, renderBuffer.width, renderBuffer.height,
-			renderBuffer.pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
-
-		// Get the frame time
-		LARGE_INTEGER currentCounter;
-		QueryPerformanceCounter(&currentCounter);
-		float counterDiff = (float)(currentCounter.QuadPart - lastCounter.QuadPart);
-
-		lastDt = counterDiff / frequencyCounter;
-
-		// reset for next frame
-		lastCounter = currentCounter;
+		else
+		{
+			// Handle unable to create window
+		}
+	}
+	else
+	{
+		// Handle windows window registration failure
 	}
 
+	return (0);
 }
+
+#endif

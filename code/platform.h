@@ -1,14 +1,15 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "math.h"
 #include "utils.h"
 
 struct
 {
+	uint32_t* pixels;
 	int width;
 	int height;
-	uint32_t *pixels;
+	int pitch;
+	int bytesPerPixel; // = 4;
 } typedef RenderBuffer;
 
 struct
@@ -16,6 +17,8 @@ struct
 	b32 isDown;
 	b32 wasDown;
 	b32 keyUp;
+	int halfTransitionCount;
+	int endedDown;
 } typedef Button;
 
 enum
@@ -32,8 +35,23 @@ enum
 
 struct
 {
-	Vector2D mouse;
+	int x;
+	int y;
+} typedef Position;
+
+struct
+{
+	Position mouse;
 	Button buttons[BUTTON_COUNT];
 } typedef Input;
+
+struct
+{
+	b32 IsInitialized;
+	uint64_t PermanentStorageSpace;
+	uint64_t TransientStorageSpace;
+	void* PermanentStorage;
+	void* TransientStorage;
+} typedef GameMemory;
 
 #endif

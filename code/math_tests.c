@@ -1,7 +1,5 @@
 #include <assert.h>
 
-#include "game.c"
-
 static void RunGetThetaForBallPlayerCollisionTest(float playerPosX, float ballPosX, float playerHalfSizeX, float expectedResult)
 {
 	float result = GetThetaForBallPlayerCollision(playerPosX, ballPosX, playerHalfSizeX);

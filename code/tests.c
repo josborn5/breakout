@@ -2,9 +2,9 @@
 
 #include "world_transforms_tests.c"
 #include "collision_tests.c"
-#include "game_tests.c"
+#include "math_tests.c"
 
-static int main()
+int main()
 {
 	RunWorldTransformsTests();
 

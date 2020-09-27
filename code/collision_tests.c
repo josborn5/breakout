@@ -26,7 +26,9 @@ static void RunCheckCollisionBlockAndBallTests(Vector2D bPosition0, Vector2D bVe
 
 	Vector2D bHalfSize = oneByOneHalfSize;
 
-	Vector2D bPosition1 = (Vector2D){ bPosition0.x, bPosition0.y };
+	Vector2D bPosition1;
+	bPosition1.x = bPosition0.x;
+	bPosition1.y = bPosition0.y;
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 
@@ -50,7 +52,9 @@ static void RunCheckCollisionBetweenMovingObjectsTests(Vector2D aVelocity, Vecto
 
 	Vector2D bHalfSize = oneByOneHalfSize;
 
-	Vector2D bPosition1 = (Vector2D){ bPosition0.x, bPosition0.y };
+	Vector2D bPosition1;
+	bPosition1.x = bPosition0.x;
+	bPosition1.y = bPosition0.y;
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 
@@ -72,7 +76,9 @@ static void RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D blockPosition0, 
 	float wallYPos = 0.0f;
 	Vector2D blockHalfSize = oneByOneHalfSize;
 
-	Vector2D blockPosition1 = (Vector2D){ blockPosition0.x, blockPosition0.y };
+	Vector2D blockPosition1;
+	blockPosition1.x = blockPosition0.x;
+	blockPosition1.y = blockPosition0.y;
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 
@@ -92,7 +98,9 @@ static void RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D blockPosition0
 	float wallYPos = 0.0f;
 	Vector2D blockHalfSize = oneByOneHalfSize;
 
-	Vector2D blockPosition1 = (Vector2D) { blockPosition0.x, blockPosition0.y };
+	Vector2D blockPosition1;
+	blockPosition1.x = blockPosition0.x;
+	blockPosition1.y = blockPosition0.y;
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 

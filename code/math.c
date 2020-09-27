@@ -48,20 +48,39 @@ static uint32_t MakeColorFromGrey(uint8_t grey)
 
 static Vector2D AddVector2D(Vector2D a, Vector2D b)
 {
-	return (Vector2D){ a.x + b.x, a.y + b.y };
+	Vector2D v;
+	v.x = a.x + b.x;
+	v.y = a.y + b.y;
+	return v;
 }
 
 static Vector2D SubtractVector2D(Vector2D a, Vector2D b)
 {
-	return (Vector2D){ a.x - b.x, a.y - b.y };
+	Vector2D v;
+	v.x = a.x - b.x;
+	v.y = a.y - b.y;
+	return v;
 }
 
 static Vector2D MultiplyVector2D(Vector2D a, float scalar)
 {
-	return (Vector2D){ scalar * a.x, scalar * a.y };
+	Vector2D v;
+	v.x = scalar * a.x;
+	v.y = scalar * a.y;
+	return v;
 }
 
 static float GetVectorMagnitude(Vector2D vector)
 {
-	return sqrt((vector.x * vector.x) + (vector.y * vector.y));
+	return (float)sqrt((vector.x * vector.x) + (vector.y * vector.y));
+}
+
+static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)
+{
+	// work out where on the player the ball hit to determine the angle the ball moves after bouncing
+	float thetaInRadians = 1.0f;
+	float m = thetaInRadians / playerHalfSizeX;
+	float b = (thetaInRadians * playerPositionX) / playerHalfSizeX;
+	float horFactor = (m * ballPositionX) - b;
+	return horFactor;
 }
