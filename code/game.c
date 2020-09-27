@@ -398,6 +398,12 @@ static void RenderGameState(RenderBuffer *renderBuffer, GameState *state)
 
 	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", (Vector2D){ 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 	DrawNumber(renderBuffer, GAME_RECT, state->score, (Vector2D){ 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+
+	DrawLineInPixels(renderBuffer, TEXT_COLOR, 0, renderBuffer->height, renderBuffer->width, 0);
+	DrawLineInPixels(renderBuffer, TEXT_COLOR, renderBuffer->width, renderBuffer->height, 0, 0);
+
+	DrawLineInPixels(renderBuffer, TEXT_COLOR, 0, (int)(renderBuffer->height / 2), renderBuffer->width, (int)(renderBuffer->height / 2));
+	DrawLineInPixels(renderBuffer, TEXT_COLOR, (int)(renderBuffer->width / 2), renderBuffer->height, (int)(renderBuffer->width / 2), 0);
 }
 
 static void GameUpdateAndRender(GameMemory *gameMemory, Input *input, RenderBuffer *renderBuffer, float dt)

@@ -10,6 +10,8 @@ struct
 	int height;
 	int pitch;
 	int bytesPerPixel; // = 4;
+	int xMax;
+	int yMax;
 } typedef RenderBuffer;
 
 struct

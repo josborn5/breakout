@@ -48,8 +48,10 @@ static void Win32_SizeRenderBufferToCurrentWindow(HWND window)
 	renderBuffer.width = clientRect.right - clientRect.left;
 	renderBuffer.height = clientRect.bottom - clientRect.top;
 	renderBuffer.bytesPerPixel = 4;
+	renderBuffer.xMax = renderBuffer.width - 1;
+	renderBuffer.yMax = renderBuffer.height - 1;
 
-	if(renderBuffer.pixels)
+	if (renderBuffer.pixels)
 	{
 		VirtualFree(renderBuffer.pixels, 0, MEM_RELEASE);
 	}
