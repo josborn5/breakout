@@ -84,7 +84,6 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 		DrawVerticalLineInPixels(renderBuffer, color, x0, y0, y1);
 		return;
 	}
-	int xDiffMod = (xDiff < 0) ? -1 * xDiff : xDiff;
 
 	int yDiff = y1 - y0;
 	if (yDiff == 0)
@@ -92,57 +91,74 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 		DrawHorizontalLineInPixels(renderBuffer, color, x0, x1, y0);
 		return;
 	}
+
+	int xDiffMod = (xDiff < 0) ? -1 * xDiff : xDiff;
 	int yDiffMod = (yDiff < 0) ? -1 * yDiff : yDiff;
-
-	float slopeMod = (float)yDiffMod / (float)xDiffMod;
-
-	int p = (2 * xDiffMod) - yDiffMod;
+	int modDiff = yDiffMod - xDiffMod;
 	int xIncrement = (xDiff < 0) ? -1 : 1;
 	int yIncrement = (yDiff < 0) ? -1 : 1;
 
 	PlotPixel(renderBuffer, color, x0, y0);
-	if (slopeMod < 1)
-	{
-		for (int i = 1; i < xDiffMod; i += 1)
-		{
-			x0 += xIncrement;
-			if (p < 0)
-			{
-				p += 2 * yDiffMod;
-			}
-			else
-			{
-				p += (2 * yDiffMod) - (2 * xDiffMod);
-				y0 += yIncrement;
-			}
-			PlotPixel(renderBuffer, color, x0, y0);
-		}
-	}
-	else if (slopeMod > 1)
-	{
-		for (int i = 1; i < yDiffMod; i += 1)
-		{
-			y0 += yIncrement;
-			if (p < 0)
-			{
-				p += 2 * xDiffMod;
-			}
-			else
-			{
-				p += (2 * xDiffMod) - (2 * yDiffMod);
-				x0 += xIncrement;
-			}
-			PlotPixel(renderBuffer, color, x0, y0);
-		}
-	}
-	else	// slope is 1, so simply increment both X & Y at on every iteration
+	// If the gradient is 1 simply increment both X & Y at on every iteration
+	if (modDiff == 0)
 	{
 		for (int i = 0; i < xDiffMod; ++i)
 		{
-			x0 += 1;
-			y0 += 1;
+			x0 += xIncrement;
+			y0 += yIncrement;
 			PlotPixel(renderBuffer, color, x0, y0);
 		}
+		return;
+	}
+
+	// If the gradient is more than one then y gets incremented on every step along the line and x sometimes gets incremented
+	// If the gradient is less than one then x gets incremented on every step along the line and y sometimes gets incremented
+	b32 isLongDimensionX = (modDiff < 0);
+	int longDimensionDiff;
+	int* longDimensionVar;	// Make this a pointer so PlotPixel can still be called with x0 & y0 arguments
+	int longDimensionIncrement;
+	int shortDimensionDiff;
+	int* shortDimensionVar;	// Make this a pointer so PlotPixel can still be called with x0 & y0 arguments
+	int shortDimensionIncrement;
+
+	if (isLongDimensionX)
+	{
+		longDimensionDiff = xDiffMod;
+		longDimensionVar = &x0;
+		longDimensionIncrement = xIncrement;
+
+		shortDimensionDiff = yDiffMod;
+		shortDimensionVar = &y0;
+		shortDimensionIncrement = yIncrement;
+	}
+	else
+	{
+		longDimensionDiff = yDiffMod;
+		longDimensionVar = &y0;
+		longDimensionIncrement = yIncrement;
+
+		shortDimensionDiff = xDiffMod;
+		shortDimensionVar = &x0;
+		shortDimensionIncrement = xIncrement;
+	}
+
+	int p = (2 * xDiffMod) - yDiffMod;
+	int negativePIncrement = 2 * shortDimensionDiff;
+	int positivePIncrement = negativePIncrement - (2 * longDimensionDiff);
+
+	for (int i = 1; i < longDimensionDiff; i += 1)
+	{
+		*longDimensionVar += longDimensionIncrement;
+		if (p < 0)
+		{
+			p += negativePIncrement;
+		}
+		else
+		{
+			p += positivePIncrement;
+			*shortDimensionVar += shortDimensionIncrement;
+		}
+		PlotPixel(renderBuffer, color, x0, y0);
 	}
 }
 
