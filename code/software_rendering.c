@@ -120,9 +120,9 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 	}
 	else if (slopeMod > 1)
 	{
-		for (int i = 1; i < xDiffMod; i += 1)
+		for (int i = 1; i < yDiffMod; i += 1)
 		{
-			x0 += xIncrement;
+			y0 += yIncrement;
 			if (p < 0)
 			{
 				p += 2 * xDiffMod;
@@ -130,7 +130,7 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 			else
 			{
 				p += (2 * xDiffMod) - (2 * yDiffMod);
-				y0 += yIncrement;
+				x0 += xIncrement;
 			}
 			PlotPixel(renderBuffer, color, x0, y0);
 		}
