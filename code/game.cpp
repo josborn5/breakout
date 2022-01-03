@@ -26,6 +26,7 @@ TODO (in no particular order):
 #include "math.h"
 #include "game.h"
 #include "../../win32-platform/bin/platform.hpp"
+#include "../../win32-platform/bin/game.hpp"
 #include "utils.h"
 
 #include "math.c"
@@ -34,7 +35,7 @@ TODO (in no particular order):
 #include "software_rendering.c"
 #include "platform_common.c"
 #include "levels.c"
-#include "win32_platform.cpp"
+#include "main_win32.cpp"
 
 #define BLOCK_AREA Vector2D { 100.0f, 20.0f }
 #define BLOCK_AREA_POS Vector2D { 30.0f, 70.0f }
@@ -407,6 +408,11 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 
 	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", Vector2D { 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 	DrawNumber(renderBuffer, GAME_RECT, state.score, Vector2D { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+}
+
+void gentle::Initialize(const GameMemory &gameMemory, const RenderBuffer &renderBuffer)
+{
+
 }
 
 void gentle::UpdateAndRender(const GameMemory &gameMemory, const Input &input, const RenderBuffer &renderBuffer, float dt)
