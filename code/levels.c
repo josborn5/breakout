@@ -24,7 +24,7 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 {
 	// clear out any remaining blocks in the block array
 	Block* firstBlock = block;
-	Vector2D originVector = (Vector2D) { 0.0f, 0.0f };
+	Vector2D originVector = Vector2D { 0.0f, 0.0f };
 	for (int i = 0; i < blockArraySize; i += 1)
 	{
 		firstBlock->exists = 0;

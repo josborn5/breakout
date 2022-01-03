@@ -4,10 +4,10 @@
 #define BLOCK_ARRAY_SIZE 64
 #define BALL_ARRAY_SIZE 3
 
-#define ZERO_VECTOR (Vector2D){ 0.0f, 0.0f }
+#define ZERO_VECTOR Vector2D { 0.0f, 0.0f }
 
-#define POWER_UP_HALF_SIZE (Vector2D){ 0.5f, 0.5f }
-#define POWER_UP_VELOCITY (Vector2D){ 0.0f, -5.0f }
+#define POWER_UP_HALF_SIZE Vector2D { 0.5f, 0.5f }
+#define POWER_UP_VELOCITY Vector2D { 0.0f, -5.0f }
 
 typedef enum PowerUpType
 {
