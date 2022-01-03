@@ -9,13 +9,7 @@
 
 #include "platform.h"
 #include "utils.h"
-#include "math.c"
-#include "collision.c"
-#include "world_transforms.c"
-#include "software_rendering.c"
-#include "platform_common.c"
-#include "levels.c"
-#include "game.c"
+#include "game.h"
 
 #define DEBUG_BUFFER_SIZE 256
 
@@ -35,7 +29,7 @@
 #define Terabytes(value) (Gigabytes(value) * 1024LL)
 
 static bool IsRunning = false;
-static RenderBuffer renderBuffer = {0};
+static RenderBuffer globalRenderBuffer = {0};
 static BITMAPINFO bitmapInfo = {0};	// platform dependent
 static LPDIRECTSOUNDBUFFER GlobalSoundBuffer = {0};
 static int64_t GlobalPerfCountFrequency;
@@ -45,35 +39,35 @@ static void Win32_SizeRenderBufferToCurrentWindow(HWND window)
 	RECT clientRect = {0};
 	GetClientRect(window, &clientRect);
 
-	renderBuffer.width = clientRect.right - clientRect.left;
-	renderBuffer.height = clientRect.bottom - clientRect.top;
-	renderBuffer.bytesPerPixel = 4;
-	renderBuffer.xMax = renderBuffer.width - 1;
-	renderBuffer.yMax = renderBuffer.height - 1;
+	globalRenderBuffer.width = clientRect.right - clientRect.left;
+	globalRenderBuffer.height = clientRect.bottom - clientRect.top;
+	globalRenderBuffer.bytesPerPixel = 4;
+	globalRenderBuffer.xMax = globalRenderBuffer.width - 1;
+	globalRenderBuffer.yMax = globalRenderBuffer.height - 1;
 
-	if (renderBuffer.pixels)
+	if (globalRenderBuffer.pixels)
 	{
-		VirtualFree(renderBuffer.pixels, 0, MEM_RELEASE);
+		VirtualFree(globalRenderBuffer.pixels, 0, MEM_RELEASE);
 	}
 
 	bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
-	bitmapInfo.bmiHeader.biWidth = renderBuffer.width;
-	bitmapInfo.bmiHeader.biHeight = renderBuffer.height;
+	bitmapInfo.bmiHeader.biWidth = globalRenderBuffer.width;
+	bitmapInfo.bmiHeader.biHeight = globalRenderBuffer.height;
 	bitmapInfo.bmiHeader.biPlanes = 1;
 	bitmapInfo.bmiHeader.biBitCount = 32;
 	bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-	int bitmapMemorySize = (renderBuffer.width * renderBuffer.height) * renderBuffer.bytesPerPixel;
-	renderBuffer.pitch = renderBuffer.width * renderBuffer.bytesPerPixel;
-	renderBuffer.pixels = (uint32_t *)VirtualAlloc(0, bitmapMemorySize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+	int bitmapMemorySize = (globalRenderBuffer.width * globalRenderBuffer.height) * globalRenderBuffer.bytesPerPixel;
+	globalRenderBuffer.pitch = globalRenderBuffer.width * globalRenderBuffer.bytesPerPixel;
+	globalRenderBuffer.pixels = (uint32_t *)VirtualAlloc(0, bitmapMemorySize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 }
 
 static void Win32_DisplayRenderBufferInWindow(HDC deviceContext)
 {
 	StretchDIBits(deviceContext,
-		0, 0, renderBuffer.width, renderBuffer.height,
-		0, 0, renderBuffer.width, renderBuffer.height,
-		renderBuffer.pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+		0, 0, globalRenderBuffer.width, globalRenderBuffer.height,
+		0, 0, globalRenderBuffer.width, globalRenderBuffer.height,
+		globalRenderBuffer.pixels, &bitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 }
 
 LRESULT CALLBACK Win32_MainWindowCallback(HWND window, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -283,10 +277,10 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR commandLi
 				GetCursorPos(&mousePointer);	// mousePointer in screen coord
 				ScreenToClient(window, &mousePointer);	// convert screen coord to window coord
 				gameInput.mouse.x = mousePointer.x;
-				gameInput.mouse.y = renderBuffer.height - mousePointer.y;
+				gameInput.mouse.y = globalRenderBuffer.height - mousePointer.y;
 
 
-				GameUpdateAndRender(&GameMemory, &gameInput, &renderBuffer, lastDt);
+				GameUpdateAndRender(&GameMemory, &gameInput, &globalRenderBuffer, lastDt);
 
 
 				ResetButtons(&gameInput);

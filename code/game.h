@@ -9,6 +9,9 @@
 #define POWER_UP_HALF_SIZE Vector2D { 0.5f, 0.5f }
 #define POWER_UP_VELOCITY Vector2D { 0.0f, -5.0f }
 
+#include <stdint.h>
+#include "platform.h"
+
 typedef enum PowerUpType
 {
 	Nothing = 0,
@@ -58,5 +61,7 @@ struct {
 	int score;
 	int lives;
 } typedef GameState;
+
+void GameUpdateAndRender(GameMemory *gameMemory, Input *input, RenderBuffer *renderBuffer, float dt);
 
 #endif

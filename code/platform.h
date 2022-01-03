@@ -1,7 +1,7 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "utils.h"
+#include <stdint.h>
 
 struct
 {
