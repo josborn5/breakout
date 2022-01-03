@@ -25,7 +25,7 @@ TODO (in no particular order):
 
 #include "math.h"
 #include "game.h"
-#include "platform.h"
+#include "../../win32-platform/bin/platform.hpp"
 #include "utils.h"
 
 #include "math.c"
@@ -104,7 +104,7 @@ static void StartLevel(int newLevel)
 	PopulateBlocksForLevel(newLevel, gamestate.blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
 }
 
-static void InitializeGameState(GameState *state, Rect pixelRect, Input *input)
+static void InitializeGameState(GameState *state, Rect pixelRect, const Input &input)
 {
 	GAME_RECT.x = X_DIM_BASE;
 	GAME_RECT.y = Y_DIM_BASE;
@@ -128,7 +128,7 @@ static void InitializeGameState(GameState *state, Rect pixelRect, Input *input)
 	minPlayerX = 0.0f;
 	maxPlayerX = (float)X_DIM_BASE;
 
-	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
 	state->player.position.x = ClampFloat(minPlayerX, state->player.position.x, maxPlayerX);
 	state->player.position.y = 20;
 	state->player.prevPosition = state->player.position;
@@ -140,11 +140,11 @@ static void InitializeGameState(GameState *state, Rect pixelRect, Input *input)
 	StartLevel(state->level);
 }
 
-static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, float dt)
+static void UpdateGameState(GameState *state, Rect pixelRect, const Input &input, float dt)
 {
 	// Update player state
 	state->player.prevPosition.x = state->player.position.x;
-	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input->mouse.x, input->mouse.y).x;
+	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
 	state->player.position.x = ClampFloat(minPlayerX, state->player.position.x, maxPlayerX);
 	state->player.velocity.x = (state->player.position.x - state->player.prevPosition.x) / dt;
 
@@ -364,17 +364,17 @@ static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, floa
 	}
 }
 
-static void RenderGameState(RenderBuffer *renderBuffer, GameState *state)
+static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &state)
 {
 	// background
 	ClearScreenAndDrawRect(renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
 
 	// player
-	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, state->player.halfSize, state->player.position);
+	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, state.player.halfSize, state.player.position);
 
 	// blocks
 	allBlocksCleared = true;
-	for (Block *block = state->blocks; block != state->blocks + ArrayCount(state->blocks); block++)
+	for (const Block *block = state.blocks; block != state.blocks + ArrayCount(state.blocks); block++)
 	{
 		if (!block->exists) continue;
 
@@ -385,13 +385,13 @@ static void RenderGameState(RenderBuffer *renderBuffer, GameState *state)
 	// ball
 	for (int i = 0; i < BALL_ARRAY_SIZE; i += 1)
 	{
-		if (!state->balls[i].exists) continue;
+		if (!state.balls[i].exists) continue;
 
-		DrawRect(renderBuffer, GAME_RECT, BALL_COLOR, state->balls[i].halfSize, state->balls[i].position);
+		DrawRect(renderBuffer, GAME_RECT, BALL_COLOR, state.balls[i].halfSize, state.balls[i].position);
 	}
 
 	// power ups
-	for (Block *block = state->blocks; block != state->blocks + ArrayCount(state->blocks); block++)
+	for (const Block *block = state.blocks; block != state.blocks + ArrayCount(state.blocks); block++)
 	{
 		if (!block->powerUp.exists) continue;
 
@@ -400,22 +400,22 @@ static void RenderGameState(RenderBuffer *renderBuffer, GameState *state)
 
 	// Balls, Level & Score
 	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", Vector2D { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state->lives, Vector2D { 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.lives, Vector2D { 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 
 	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", Vector2D { 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state->level, Vector2D { 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.level, Vector2D { 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 
 	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", Vector2D { 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state->score, Vector2D { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.score, Vector2D { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 }
 
-void GameUpdateAndRender(GameMemory *gameMemory, Input *input, RenderBuffer *renderBuffer, float dt)
+void gentle::UpdateAndRender(const GameMemory &gameMemory, const Input &input, const RenderBuffer &renderBuffer, float dt)
 {
 	Rect pixelRect = {0};
-	pixelRect.x = renderBuffer->width;
-	pixelRect.y = renderBuffer->height;
+	pixelRect.x = renderBuffer.width;
+	pixelRect.y = renderBuffer.height;
 
-	if (IsReleased(input, BUTTON_RESET))
+	if (IsReleased(input, KEY_R))
 	{
 		initialized = false;
 	}
@@ -427,7 +427,7 @@ void GameUpdateAndRender(GameMemory *gameMemory, Input *input, RenderBuffer *ren
 		return;
 	}
 
-	if (IsReleased(input, BUTTON_PAUSE))
+	if (IsReleased(input, KEY_SPACE))
 	{
 		isPaused = !isPaused;
 	}
@@ -437,5 +437,5 @@ void GameUpdateAndRender(GameMemory *gameMemory, Input *input, RenderBuffer *ren
 		UpdateGameState(&gamestate, pixelRect, input, dt);
 	}
 
-	RenderGameState(renderBuffer, &gamestate);
+	RenderGameState(renderBuffer, gamestate);
 }

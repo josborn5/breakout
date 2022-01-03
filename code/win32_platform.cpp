@@ -7,7 +7,8 @@
 #include <dsound.h>
 #include <math.h>
 
-#include "platform.h"
+#include "../../win32-platform/bin/platform.hpp"
+#include "../../win32-platform/bin/game.hpp"
 #include "utils.h"
 #include "game.h"
 
@@ -42,8 +43,6 @@ static void Win32_SizeRenderBufferToCurrentWindow(HWND window)
 	globalRenderBuffer.width = clientRect.right - clientRect.left;
 	globalRenderBuffer.height = clientRect.bottom - clientRect.top;
 	globalRenderBuffer.bytesPerPixel = 4;
-	globalRenderBuffer.xMax = globalRenderBuffer.width - 1;
-	globalRenderBuffer.yMax = globalRenderBuffer.height - 1;
 
 	if (globalRenderBuffer.pixels)
 	{
@@ -116,10 +115,6 @@ static void Win32_ProcessKeyboardMessage(Button* gameButton, int isDown, int was
 {
 	if (vkCode == vkButton)
 	{
-		Assert(gameButton->endedDown != (int)isDown);
-		gameButton->endedDown = isDown;
-		++gameButton->halfTransitionCount;
-
 		gameButton->isDown = isDown;
 		gameButton->wasDown = wasDown;
 		gameButton->keyUp = (!isDown && wasDown);
@@ -161,16 +156,16 @@ static void Win32_ProcessPendingMessages(Input* input)
 				bool isDown = ((Message.lParam & (1 << 31)) == 0); // Bit #31 of the LParam tells us what the current key is
 				if (wasDown != isDown)
 				{
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_UP], isDown, wasDown, vKCode, 'W');
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_UP], isDown, wasDown, vKCode, VK_UP);
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_DOWN], isDown, wasDown, vKCode, 'S');
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_DOWN], isDown, wasDown, vKCode, VK_DOWN);
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_LEFT], isDown, wasDown, vKCode, 'A');
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_LEFT], isDown, wasDown, vKCode, VK_LEFT);
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RIGHT], isDown, wasDown, vKCode, 'D');
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RIGHT], isDown, wasDown, vKCode, VK_RIGHT);
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_PAUSE], isDown, wasDown, vKCode, VK_SPACE);
-					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RESET], isDown, wasDown, vKCode, 'R');
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_UP], isDown, wasDown, vKCode, 'W');
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_UP], isDown, wasDown, vKCode, VK_UP);
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_DOWN], isDown, wasDown, vKCode, 'S');
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_DOWN], isDown, wasDown, vKCode, VK_DOWN);
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_LEFT], isDown, wasDown, vKCode, 'A');
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_LEFT], isDown, wasDown, vKCode, VK_LEFT);
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_RIGHT], isDown, wasDown, vKCode, 'D');
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_RIGHT], isDown, wasDown, vKCode, VK_RIGHT);
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_SPACE], isDown, wasDown, vKCode, VK_SPACE);
+					Win32_ProcessKeyboardMessage(&input->buttons[KEY_R], isDown, wasDown, vKCode, 'R');
 				}
 
 				bool altKeyDown = ((Message.lParam & (1 << 29)) != 0);
@@ -280,7 +275,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR commandLi
 				gameInput.mouse.y = globalRenderBuffer.height - mousePointer.y;
 
 
-				GameUpdateAndRender(&GameMemory, &gameInput, &globalRenderBuffer, lastDt);
+				gentle::UpdateAndRender(GameMemory, gameInput, globalRenderBuffer, lastDt);
 
 
 				ResetButtons(&gameInput);
