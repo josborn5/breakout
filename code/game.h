@@ -22,7 +22,7 @@ struct {
 	Vector2D halfSize;
 	Vector2D velocity;
 	PowerUpType type;
-	b32 exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection
+	bool exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection
 	uint32_t color;
 } typedef PowerUp;
 
@@ -38,14 +38,14 @@ struct {
 	Vector2D position;
 	Vector2D halfSize;
 	Vector2D velocity;
-	b32 exists;
+	bool exists;
 } typedef Ball;
 
 struct {
 	Vector2D position;
 	Vector2D halfSize;
 	uint32_t color;
-	b32 exists;
+	bool exists;
 	PowerUp powerUp;
 } typedef Block;
 
@@ -53,7 +53,7 @@ struct {
 	Player player;
 	Ball balls[BALL_ARRAY_SIZE];
 	Block blocks[BLOCK_ARRAY_SIZE];
-	b32 isCometActive;
+	bool isCometActive;
 	int level;
 	int score;
 	int lives;

@@ -1,14 +1,14 @@
 #include "utils.h"
 #include "math.h"
 
-static b32 AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
+static bool AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
 {
-	b32 verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
-	b32 horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
+	bool verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
+	bool horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
 	return verticalCollision && horizontalCollision;
 }
 
-static b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
+static bool AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
 {
 	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
 	Vector2D bTopRight = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
@@ -18,7 +18,7 @@ static b32 AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHa
 	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
 }
 
-static b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
+static bool AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
 {
 	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
 	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
@@ -26,7 +26,7 @@ static b32 AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D b
 	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
 }
 
-static b32 AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
+static bool AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
 {
 	return ((aPos.x + aHalfSize.x) > horizontalPos && (aPos.x - aHalfSize.x) < horizontalPos);
 }
@@ -144,7 +144,7 @@ static void CheckBlockAndRightWallCollision(
 	}
 }
 
-static b32 CheckBlockAndBallCollision(
+static bool CheckBlockAndBallCollision(
 	Vector2D blockHalfSize,
 	Vector2D blockP,
 	Vector2D ballHalfSize,
@@ -155,7 +155,7 @@ static b32 CheckBlockAndBallCollision(
 	Vector2D *ballPosition
 )
 {
-	b32 collided = false;
+	bool collided = false;
 	float blockTopSide = blockP.y + blockHalfSize.y + ballHalfSize.y;
 	float blockBottomSide = blockP.y - blockHalfSize.y - ballHalfSize.y;
 	float blockLeftSide = blockP.x - blockHalfSize.x - ballHalfSize.x;
@@ -226,7 +226,7 @@ static b32 CheckBlockAndBallCollision(
 	return collided;
 }
 
-static b32 CheckCollisionBetweenMovingObjects(
+static bool CheckCollisionBetweenMovingObjects(
 	Vector2D aHalfSize,
 	Vector2D aPosition0,
 	Vector2D aVelocity,
@@ -241,7 +241,7 @@ static b32 CheckCollisionBetweenMovingObjects(
 	// Calculate relative velocity as between a & b, as if a is static. i.e. the origin of our co-ordinate system is fixed to whereever object 'a' is
 	Vector2D aRelBVelocity = SubtractVector2D(bVelocity, aVelocity);
 
-	b32 result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, aRelBVelocity, maxCollisionTime, collisionResult, bPosition1);
+	bool result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, aRelBVelocity, maxCollisionTime, collisionResult, bPosition1);
 
 	// Translate bPosition1 from the co-ordinate system whose origin is on 'a' back to the static co-ordinate system
 	if (result)

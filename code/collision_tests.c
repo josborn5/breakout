@@ -6,18 +6,18 @@
 #include "collision.c"
 
 #define originalCollisionTime 10.0f
-#define originPosition (Vector2D){ 0.0f, 0.0f }
-#define oneByOneHalfSize (Vector2D){ 1.0f, 1.0f }
+#define originPosition Vector2D { 0.0f, 0.0f }
+#define oneByOneHalfSize Vector2D { 1.0f, 1.0f }
 
-#define movingLeft (Vector2D){ -2.0f, 0.0f }
-#define movingRight (Vector2D){ 2.0f, 0.0f }
-#define movingUp (Vector2D){ 0.0f, 2.0f }
-#define movingDown (Vector2D){ 0.0f, -2.0f }
+#define movingLeft Vector2D { -2.0f, 0.0f }
+#define movingRight Vector2D { 2.0f, 0.0f }
+#define movingUp Vector2D { 0.0f, 2.0f }
+#define movingDown Vector2D { 0.0f, -2.0f }
 
-#define blockRightOfOrigin (Vector2D){ 4.0f, 0.0f }
-#define blockLeftOfOrigin (Vector2D){ -4.0f, 0.0f }
-#define blockAboveOrigin (Vector2D){ 0.0f, 4.0f }
-#define blockBelowOrigin (Vector2D){ 0.0f, -4.0f }
+#define blockRightOfOrigin Vector2D { 4.0f, 0.0f }
+#define blockLeftOfOrigin Vector2D { -4.0f, 0.0f }
+#define blockAboveOrigin Vector2D { 0.0f, 4.0f }
+#define blockBelowOrigin Vector2D { 0.0f, -4.0f }
 
 static void RunCheckCollisionBlockAndBallTests(Vector2D bPosition0, Vector2D bVelocity, float expectedCollisionTime, int expectedCollisionResult, Vector2D expectedCollisionPosition)
 {
@@ -32,8 +32,8 @@ static void RunCheckCollisionBlockAndBallTests(Vector2D bPosition0, Vector2D bVe
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 
-	b32 result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, bVelocity, &collisionTime, &collisionResult, &bPosition1);
-	b32 expectedCollision = (expectedCollisionResult != None);
+	bool result = CheckBlockAndBallCollision(aHalfSize, aPosition0, bHalfSize, bPosition0, bVelocity, &collisionTime, &collisionResult, &bPosition1);
+	bool expectedCollision = (expectedCollisionResult != None);
 	printf("collisionResult is %d\n", collisionResult);
 	printf("collisionTime is %f\n", collisionTime);
 	printf("collisionPosition.x is %f\n", bPosition1.x);
@@ -58,8 +58,8 @@ static void RunCheckCollisionBetweenMovingObjectsTests(Vector2D aVelocity, Vecto
 	float collisionTime = originalCollisionTime;
 	int collisionResult = None;
 
-	b32 result = CheckCollisionBetweenMovingObjects(aHalfSize, aPosition0, aVelocity, bHalfSize, bPosition0, bVelocity, &collisionTime, &collisionResult, &bPosition1);
-	b32 expectedCollision = (expectedCollisionResult != None);
+	bool result = CheckCollisionBetweenMovingObjects(aHalfSize, aPosition0, aVelocity, bHalfSize, bPosition0, bVelocity, &collisionTime, &collisionResult, &bPosition1);
+	bool expectedCollision = (expectedCollisionResult != None);
 	printf("collisionResult is %d\n", collisionResult);
 	printf("collisionTime is %f\n", collisionTime);
 	printf("collisionPosition.x is %f\n", bPosition1.x);
@@ -124,54 +124,54 @@ static void RunCollisionTests()
 
 	/* A <--B--> Right Hand Side collisions */
 	// collision on x-axis
-	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, movingLeft, 1, Right, (Vector2D){ 2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, movingLeft, 1, Right, Vector2D { 2.0f, 0.0f });
 
 	// No collision on x-axis when moving too slow to collide before collision time boundary
-	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, (Vector2D){ -0.20000001f, 0.0f }, originalCollisionTime, None, (Vector2D){ 4.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, Vector2D { -0.20000001f, 0.0f }, originalCollisionTime, None, Vector2D { 4.0f, 0.0f });
 
 	// Collision on x-axis when moving slow to collide on collision time
-	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, (Vector2D){ -0.20000002f, 0.0f }, 9.99999905f, Right, (Vector2D){ 2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, Vector2D { -0.20000002f, 0.0f }, 9.99999905f, Right, Vector2D { 2.0f, 0.0f });
 
 	// No collision on x axis when moving away from each other
-	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, movingRight, originalCollisionTime, None, (Vector2D){ 4.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockRightOfOrigin, movingRight, originalCollisionTime, None, Vector2D { 4.0f, 0.0f });
 
 	// Collision on x axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 4.0f, 2.0f }, movingLeft, 1, Right, (Vector2D){ 2.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 4.0f, 2.0f }, movingLeft, 1, Right, Vector2D { 2.0f, 2.0f });
 
 	// No Collision on x axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 4.0f, 2.000001f }, movingLeft, originalCollisionTime, None, (Vector2D){ 4.0f, 2.000001f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 4.0f, 2.000001f }, movingLeft, originalCollisionTime, None, Vector2D { 4.0f, 2.000001f });
 
 	// Collision when already touching and moving toward each other
-	RunCheckCollisionBlockAndBallTests((Vector2D) { 2.0f, 0.0f }, movingLeft, 0.0f, Right, (Vector2D) { 2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D  { 2.0f, 0.0f }, movingLeft, 0.0f, Right, Vector2D  { 2.0f, 0.0f });
 
 	// No collision when already touching and moving away from each other
-	RunCheckCollisionBlockAndBallTests((Vector2D) { 2.0f, 0.0f }, movingRight, originalCollisionTime, None, (Vector2D) { 2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D  { 2.0f, 0.0f }, movingRight, originalCollisionTime, None, Vector2D  { 2.0f, 0.0f });
 
 
 	/* <--B--> A Left Hand Side collisions */
 	// collision on x-axis
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, (Vector2D){ -2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, Vector2D { -2.0f, 0.0f });
 
 	// No collision on x-axis when moving too slow to collide before collision time boundary
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, (Vector2D){ 0.20000001f, 0.0f }, originalCollisionTime, None, (Vector2D){ -4.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, Vector2D { 0.20000001f, 0.0f }, originalCollisionTime, None, Vector2D { -4.0f, 0.0f });
 
 	// Collision on x-axis when moving slow to collide on collision time
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, (Vector2D){ 0.20000002f, 0.0f }, 9.99999905f, Left, (Vector2D){ -2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, Vector2D { 0.20000002f, 0.0f }, 9.99999905f, Left, Vector2D { -2.0f, 0.0f });
 
 	// No collision on x axis when moving away from each other
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingLeft, originalCollisionTime, None, (Vector2D){ -4.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingLeft, originalCollisionTime, None, Vector2D { -4.0f, 0.0f });
 
 	// Collision on x axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, (Vector2D){ -2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(blockLeftOfOrigin, movingRight, 1, Left, Vector2D { -2.0f, 0.0f });
 
 	// No Collision on x axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ -4.0f, 2.000001f }, movingRight, originalCollisionTime, None, (Vector2D){ -4.0f, 2.000001f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { -4.0f, 2.000001f }, movingRight, originalCollisionTime, None, Vector2D { -4.0f, 2.000001f });
 
 	// Collision when already touching and moving toward each other
-	RunCheckCollisionBlockAndBallTests((Vector2D){ -2.0f, 0.0f }, movingRight, 0.0f, Left, (Vector2D){ -2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { -2.0f, 0.0f }, movingRight, 0.0f, Left, Vector2D { -2.0f, 0.0f });
 
 	// No collision when already touching and moving away from each other
-	RunCheckCollisionBlockAndBallTests((Vector2D) { -2.0f, 0.0f }, movingLeft, originalCollisionTime, None, (Vector2D) { -2.0f, 0.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D  { -2.0f, 0.0f }, movingLeft, originalCollisionTime, None, Vector2D  { -2.0f, 0.0f });
 
 	/* A	Bottom Side collisions
 	 *
@@ -182,28 +182,28 @@ static void RunCollisionTests()
 	 * V
 	 */
 	// collision on y-axis
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, (Vector2D){ 0.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, Vector2D { 0.0f, -2.0f });
 
 	// No collision on y-axis when moving too slow to collide before collision time boundary
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, (Vector2D){ 0.0f, 0.20000001f }, originalCollisionTime, None, (Vector2D){ 0.0f, -4.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, Vector2D { 0.0f, 0.20000001f }, originalCollisionTime, None, Vector2D { 0.0f, -4.0f });
 
 	// Collision on y-axis when moving slow to collide on collision time
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, (Vector2D){ 0.0f, 0.20000002f }, 9.99999905f, Bottom, (Vector2D){ 0.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, Vector2D { 0.0f, 0.20000002f }, 9.99999905f, Bottom, Vector2D { 0.0f, -2.0f });
 
 	// No collision on y axis when moving away from each other
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingDown, originalCollisionTime, None, (Vector2D){ 0.0f, -4.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingDown, originalCollisionTime, None, Vector2D { 0.0f, -4.0f });
 
 	// Collision on y axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, (Vector2D){ 0.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(blockBelowOrigin, movingUp, 1, Bottom, Vector2D { 0.0f, -2.0f });
 
 	// No Collision on y axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.000001f, -4.0f }, movingUp, originalCollisionTime, None, (Vector2D){ 2.000001f, -4.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 2.000001f, -4.0f }, movingUp, originalCollisionTime, None, Vector2D { 2.000001f, -4.0f });
 
 	// Collision when already touching and moving toward each other
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 0.0f, -2.0f }, movingUp, 0.0f, Bottom, (Vector2D){ 0.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 0.0f, -2.0f }, movingUp, 0.0f, Bottom, Vector2D { 0.0f, -2.0f });
 
 	// No collision when already touching and moving away from each other
-	RunCheckCollisionBlockAndBallTests((Vector2D) { 0.0f, -2.0f }, movingDown, originalCollisionTime, None, (Vector2D) { 0.0f, -2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D  { 0.0f, -2.0f }, movingDown, originalCollisionTime, None, Vector2D  { 0.0f, -2.0f });
 
 	/* Λ	Top Side collisions
 	 * |
@@ -214,28 +214,28 @@ static void RunCollisionTests()
 	 * A
 	 */
 	// collision on y-axis
-	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, movingDown, 1, Top, (Vector2D){ 0.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, movingDown, 1, Top, Vector2D { 0.0f, 2.0f });
 
 	// No collision on y-axis when moving too slow to collide before collision time boundary
-	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, (Vector2D){ 0.0f, -0.20000001f }, originalCollisionTime, None, (Vector2D){ 0.0f, 4.0f });
+	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, Vector2D { 0.0f, -0.20000001f }, originalCollisionTime, None, Vector2D { 0.0f, 4.0f });
 
 	// Collision on y-axis when moving slow to collide on collision time
-	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, (Vector2D){ 0.0f, -0.20000002f }, 9.99999905f, Top, (Vector2D){ 0.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, Vector2D { 0.0f, -0.20000002f }, 9.99999905f, Top, Vector2D { 0.0f, 2.0f });
 
 	// No collision on y axis when moving away from each other
-	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, movingUp, originalCollisionTime, None, (Vector2D){ 0.0f, 4.0f });
+	RunCheckCollisionBlockAndBallTests(blockAboveOrigin, movingUp, originalCollisionTime, None, Vector2D { 0.0f, 4.0f });
 
 	// Collision on y axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.0f, 4.0f }, movingDown, 1, Top, (Vector2D){ 2.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 2.0f, 4.0f }, movingDown, 1, Top, Vector2D { 2.0f, 2.0f });
 
 	// No Collision on y axis when moving toward each other off center at boundary
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 2.000001f, 4.0f }, movingDown, originalCollisionTime, None, (Vector2D){ 2.000001f, 4.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 2.000001f, 4.0f }, movingDown, originalCollisionTime, None, Vector2D { 2.000001f, 4.0f });
 
 	// Collision when already touching and moving toward each other
-	RunCheckCollisionBlockAndBallTests((Vector2D){ 0.0f, 2.0f }, movingDown, 0.0f, Top, (Vector2D){ 0.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D { 0.0f, 2.0f }, movingDown, 0.0f, Top, Vector2D { 0.0f, 2.0f });
 
 	// No collision when already touching and moving away from each other
-	RunCheckCollisionBlockAndBallTests((Vector2D) { 0.0f, 2.0f }, movingUp, originalCollisionTime, None, (Vector2D) { 0.0f, 2.0f });
+	RunCheckCollisionBlockAndBallTests(Vector2D  { 0.0f, 2.0f }, movingUp, originalCollisionTime, None, Vector2D  { 0.0f, 2.0f });
 
 	/*
 	 * CheckCollisionBetweenMovingObjects
@@ -243,16 +243,16 @@ static void RunCollisionTests()
 	 */
 
 	// collision on x-axis: A--> <--B Right Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests(movingRight, blockRightOfOrigin, movingLeft, 0.5f, Right, (Vector2D){ 3.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(movingRight, blockRightOfOrigin, movingLeft, 0.5f, Right, Vector2D { 3.0f, 0.0f });
 
 	// collision on x-axis: <-A <--B Right Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ -1.0f, 0.0f }, blockRightOfOrigin, movingLeft, 2.0f, Right, (Vector2D){ 0.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(Vector2D { -1.0f, 0.0f }, blockRightOfOrigin, movingLeft, 2.0f, Right, Vector2D { 0.0f, 0.0f });
 
 	// collision on x-axis: B--> <--A Left Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests(movingLeft, blockLeftOfOrigin, movingRight, 0.5f, Left, (Vector2D){ -3.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(movingLeft, blockLeftOfOrigin, movingRight, 0.5f, Left, Vector2D { -3.0f, 0.0f });
 
 	// collision on x-axis: B--> A-> Left Hand Side collisions
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 1.0f, 0.0f }, blockLeftOfOrigin, movingRight, 2.0f, Left, (Vector2D){ 0.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(Vector2D { 1.0f, 0.0f }, blockLeftOfOrigin, movingRight, 2.0f, Left, Vector2D { 0.0f, 0.0f });
 
 	/* A	Bottom Side collisions
 	 * |
@@ -263,7 +263,7 @@ static void RunCollisionTests()
 	 * B
 	 */
 	 // collision on y-axis
-	RunCheckCollisionBetweenMovingObjectsTests(movingDown, blockBelowOrigin, movingUp, 0.5f, Bottom, (Vector2D){ 0.0f, -3.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(movingDown, blockBelowOrigin, movingUp, 0.5f, Bottom, Vector2D { 0.0f, -3.0f });
 
 	/* Λ	Bottom Side collisions
 	 * |
@@ -275,7 +275,7 @@ static void RunCollisionTests()
 	 * B
 	 */
 	 // collision on y-axis
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, 1.0f }, blockBelowOrigin, movingUp, 2.0f, Bottom, (Vector2D){ 0.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(Vector2D { 0.0f, 1.0f }, blockBelowOrigin, movingUp, 2.0f, Bottom, Vector2D { 0.0f, 0.0f });
 
 	/* B	Top Side collisions
 	 * |
@@ -286,7 +286,7 @@ static void RunCollisionTests()
 	 * A
 	 */
 	 // collision on y-axis
-	RunCheckCollisionBetweenMovingObjectsTests(movingUp, blockAboveOrigin, movingDown, 0.5f, Top, (Vector2D){ 0.0f, 3.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(movingUp, blockAboveOrigin, movingDown, 0.5f, Top, Vector2D { 0.0f, 3.0f });
 
 	/* B	Top Side collisions
 	 * |
@@ -298,7 +298,7 @@ static void RunCollisionTests()
 	 * V
 	 */
 	 // collision on y-axis
-	RunCheckCollisionBetweenMovingObjectsTests((Vector2D){ 0.0f, -1.0f }, blockAboveOrigin, movingDown, 2.0f, Top, (Vector2D){ 0.0f, 0.0f });
+	RunCheckCollisionBetweenMovingObjectsTests(Vector2D { 0.0f, -1.0f }, blockAboveOrigin, movingDown, 2.0f, Top, Vector2D { 0.0f, 0.0f });
 
 
 	/*
@@ -311,31 +311,31 @@ static void RunCollisionTests()
 	 * V
 	 *---
 	 */
-	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 10.0f, 4.0f }, movingDown, 1.5f, Top, (Vector2D){ 10.0f, 1.0f });
+	RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D { 10.0f, 4.0f }, movingDown, 1.5f, Top, Vector2D { 10.0f, 1.0f });
 
 	/* B
 	 *---
 	 * |
 	 * V
 	 */
-	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ -10.0f, 1.0f }, movingDown, 0.0f, Top, (Vector2D){ -10.0f, 1.0f });
+	RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D { -10.0f, 1.0f }, movingDown, 0.0f, Top, Vector2D { -10.0f, 1.0f });
 
 	/* Λ
 	 * |
 	 * B
 	 *---
 	 */
-	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingUp, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+	RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D { 0.0f, 1.0f }, movingUp, originalCollisionTime, None, Vector2D { 0.0f, 1.0f });
 
 	/* B-->
 	 *------
 	 */
-	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingRight, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+	RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D { 0.0f, 1.0f }, movingRight, originalCollisionTime, None, Vector2D { 0.0f, 1.0f });
 
 	/* <--B
 	 *------
 	 */
-	RunCheckBlockAndTopsideOfWallCollisionTest((Vector2D){ 0.0f, 1.0f }, movingLeft, originalCollisionTime, None, (Vector2D){ 0.0f, 1.0f });
+	RunCheckBlockAndTopsideOfWallCollisionTest(Vector2D { 0.0f, 1.0f }, movingLeft, originalCollisionTime, None, Vector2D { 0.0f, 1.0f });
 
 
 	/*
@@ -348,29 +348,29 @@ static void RunCollisionTests()
 	  * |
 	  * B
 	  */
-	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 10.0f, -4.0f }, movingUp, 1.5f, Bottom, (Vector2D){ 10.0f, -1.0f });
+	RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D { 10.0f, -4.0f }, movingUp, 1.5f, Bottom, Vector2D { 10.0f, -1.0f });
 
 	/* Λ
 	 * |
 	 *---
 	 * B
 	 */
-	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ -10.0f, -1.0f }, movingUp, 0.0f, Bottom, (Vector2D){ -10.0f, -1.0f });
+	RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D { -10.0f, -1.0f }, movingUp, 0.0f, Bottom, Vector2D { -10.0f, -1.0f });
 
 	/*---
 	 * B
 	 * |
 	 * V
 	 */
-	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingDown, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
+	RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D { 0.0f, -1.0f }, movingDown, originalCollisionTime, None, Vector2D { 0.0f, -1.0f });
 
 	/*------
 	 *B-->
 	 */
-	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingRight, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
+	RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D { 0.0f, -1.0f }, movingRight, originalCollisionTime, None, Vector2D { 0.0f, -1.0f });
 
 	/*------
 	 * <--B
 	 */
-	RunCheckBlockAndUndersideOfWallCollisionTest((Vector2D){ 0.0f, -1.0f }, movingLeft, originalCollisionTime, None, (Vector2D){ 0.0f, -1.0f });
+	RunCheckBlockAndUndersideOfWallCollisionTest(Vector2D { 0.0f, -1.0f }, movingLeft, originalCollisionTime, None, Vector2D { 0.0f, -1.0f });
 }

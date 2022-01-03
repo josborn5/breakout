@@ -1,6 +1,6 @@
 #include "math.h"
 
-internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
+static void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 {
 	uint32_t *pixel = renderBuffer->pixels;
 
@@ -14,7 +14,7 @@ internal void ClearScreen(RenderBuffer* renderBuffer, uint32_t color)
 	}
 }
 
-internal void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0, int y0, int x1, int y1)
+static void DrawRectInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0, int y0, int x1, int y1)
 {
 	// Make sure writing to the render buffer does not escape its bounds
 	x0 = ClampInt(1, x0, renderBuffer->xMax);
@@ -113,7 +113,7 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 
 	// If the gradient is more than one then y gets incremented on every step along the line and x sometimes gets incremented
 	// If the gradient is less than one then x gets incremented on every step along the line and y sometimes gets incremented
-	b32 isLongDimensionX = (modDiff < 0);
+	bool isLongDimensionX = (modDiff < 0);
 	int longDimensionDiff;
 	int* longDimensionVar;	// Make this a pointer so PlotPixel can still be called with x0 & y0 arguments
 	int longDimensionIncrement;
@@ -162,7 +162,7 @@ static void DrawLineInPixels(RenderBuffer* renderBuffer, uint32_t color, int x0,
 	}
 }
 
-internal void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
+static void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
 	Rect pixelRect = {0};
@@ -173,7 +173,7 @@ internal void DrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
 }
 
-internal void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
+static void ClearScreenAndDrawRect(RenderBuffer* renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
 	Rect pixelRect = {0};

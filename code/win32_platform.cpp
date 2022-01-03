@@ -34,7 +34,7 @@
 #define Gigabytes(value) (Megabytes(value) * 1024LL)
 #define Terabytes(value) (Gigabytes(value) * 1024LL)
 
-static b32 IsRunning = false;
+static bool IsRunning = false;
 static RenderBuffer renderBuffer = {0};
 static BITMAPINFO bitmapInfo = {0};	// platform dependent
 static LPDIRECTSOUNDBUFFER GlobalSoundBuffer = {0};
@@ -163,8 +163,8 @@ static void Win32_ProcessPendingMessages(Input* input)
 			case WM_KEYUP:
 			{
 				uint32_t vKCode = (uint32_t)Message.wParam;
-				b32 wasDown = ((Message.lParam & (1 << 30)) != 0); // Bit #30 of the LParam tells us what the previous key was
-				b32 isDown = ((Message.lParam & (1 << 31)) == 0); // Bit #31 of the LParam tells us what the current key is
+				bool wasDown = ((Message.lParam & (1 << 30)) != 0); // Bit #30 of the LParam tells us what the previous key was
+				bool isDown = ((Message.lParam & (1 << 31)) == 0); // Bit #31 of the LParam tells us what the current key is
 				if (wasDown != isDown)
 				{
 					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_UP], isDown, wasDown, vKCode, 'W');
@@ -179,7 +179,7 @@ static void Win32_ProcessPendingMessages(Input* input)
 					Win32_ProcessKeyboardMessage(&input->buttons[BUTTON_RESET], isDown, wasDown, vKCode, 'R');
 				}
 
-				b32 altKeyDown = ((Message.lParam & (1 << 29)) != 0);
+				bool altKeyDown = ((Message.lParam & (1 << 29)) != 0);
 				if((vKCode == VK_F4) && altKeyDown)
 				{
 					IsRunning = false;
@@ -224,7 +224,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR commandLi
 	// Set the Windows schedular granularity to 1ms to help our Sleep() function call be granular
 	UINT DesiredSchedulerMS = 1;
 	MMRESULT setSchedularGranularityResult = timeBeginPeriod(DesiredSchedulerMS);
-	b32 SleepIsGranular = (setSchedularGranularityResult == TIMERR_NOERROR);
+	bool SleepIsGranular = (setSchedularGranularityResult == TIMERR_NOERROR);
 
 	WNDCLASSA windowClass = {0};
 	windowClass.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
@@ -255,7 +255,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR commandLi
 			GameMemory.TransientStorageSpace = Megabytes((uint64_t)1);
 
 			uint64_t totalStorageSpace = GameMemory.PermanentStorageSpace + GameMemory.TransientStorageSpace;
-			b32 successfulMemoryAllocation = true;
+			bool successfulMemoryAllocation = true;
 			GameMemory.PermanentStorage = VirtualAlloc(0, (size_t)totalStorageSpace, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 			if(GameMemory.PermanentStorage == NULL)
 			{

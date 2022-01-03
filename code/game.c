@@ -51,10 +51,10 @@ const float BAT_HEIGHT = 1.0f;
 
 Rect GAME_RECT = {0};
 
-internal const int X_DIM_ORIGIN = 0;
-internal const int X_DIM_BASE = 160;
-internal const int Y_DIM_ORIGIN = 0;
-internal const int Y_DIM_BASE = 90;
+const int X_DIM_ORIGIN = 0;
+const int X_DIM_BASE = 160;
+const int Y_DIM_ORIGIN = 0;
+const int Y_DIM_BASE = 90;
 const int STARTING_LIVES = 3;
 
 float minPlayerX;
@@ -65,9 +65,9 @@ Vector2D worldHalfSize = {0};
 
 GameState gamestate = {0};
 
-b32 initialized = false;
-b32 isPaused = false;
-b32 allBlocksCleared = false;;
+bool initialized = false;
+bool isPaused = false;
+bool allBlocksCleared = false;;
 
 char debugStringBuffer[256];
 
@@ -150,7 +150,7 @@ static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, floa
 		int ballCollisionResult = None;
 		int collisionCheckCount = 0;
 		int maxCollisionCheckCount = 4;
-		b32 checkCollision = true;
+		bool checkCollision = true;
 
 		while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
 		{
@@ -164,7 +164,7 @@ static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, floa
 			{
 				state->balls[i].exists = false;
 
-				b32 anyBallsLeft = false;
+				bool anyBallsLeft = false;
 				for (int j = 0; j < BALL_ARRAY_SIZE; j += 1)
 				{
 					if (state->balls[j].exists)
@@ -202,7 +202,7 @@ static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, floa
 				Block *block = &state->blocks[j];
 				if (!block->exists) continue;
 
-				b32 collided = CheckBlockAndBallCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+				bool collided = CheckBlockAndBallCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
 				if (collided)
 				{
 					blockHitIndex = j;
@@ -211,8 +211,8 @@ static void UpdateGameState(GameState *state, Rect pixelRect, Input *input, floa
 
 			// Check for collision between ball and bat
 			Player player = state->player;
-			b32 playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			b32 blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
+			bool playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, player.prevPosition, player.velocity, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			bool blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
 
 			checkCollision = (ballCollisionResult != None);
 			if (checkCollision)

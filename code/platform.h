@@ -16,9 +16,9 @@ struct
 
 struct
 {
-	b32 isDown;
-	b32 wasDown;
-	b32 keyUp;
+	bool isDown;
+	bool wasDown;
+	bool keyUp;
 	int halfTransitionCount;
 	int endedDown;
 } typedef Button;
@@ -49,7 +49,7 @@ struct
 
 struct
 {
-	b32 IsInitialized;
+	bool IsInitialized;
 	uint64_t PermanentStorageSpace;
 	uint64_t TransientStorageSpace;
 	void* PermanentStorage;

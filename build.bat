@@ -26,5 +26,5 @@ REM cl %COMMON_COMPILER_FLAGS% ..\code\win32_platform.cpp /link -subsystem:windo
 REM 64-bit build
 cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\win32_platform.cpp /link %COMMON_LINKER_FLAGS%
 
-cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\tests.c
+cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\tests.cpp
 POPD
