@@ -7,9 +7,9 @@
 #define ZERO_VECTOR Vector2D { 0.0f, 0.0f }
 
 #define POWER_UP_HALF_SIZE Vector2D { 0.5f, 0.5f }
-#define POWER_UP_VELOCITY Vector2D { 0.0f, -5.0f }
 
-#include <stdint.h>
+#include "math.h"
+#include "../../win32-platform/bin/math.hpp"
 
 typedef enum PowerUpType
 {
@@ -18,15 +18,16 @@ typedef enum PowerUpType
 	Comet = 2
 } PowerUpType;
 
-struct {
-	Vector2D prevPosition;
-	Vector2D position;
+struct PowerUp
+{
+	gentle::Vec2<float> prevPosition;
+	gentle::Vec2<float> position;
 	Vector2D halfSize;
-	Vector2D velocity;
+	gentle::Vec2<float> velocity;
 	PowerUpType type;
 	bool exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection
-	uint32_t color;
-} typedef PowerUp;
+	int color;
+};
 
 struct {
 	Vector2D prevPosition;
@@ -46,7 +47,7 @@ struct {
 struct {
 	Vector2D position;
 	Vector2D halfSize;
-	uint32_t color;
+	int color;
 	bool exists;
 	PowerUp powerUp;
 } typedef Block;

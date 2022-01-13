@@ -28,6 +28,7 @@ TODO (in no particular order):
 #include "../../win32-platform/bin/platform.hpp"
 #include "../../win32-platform/bin/game.hpp"
 #include "utils.h"
+#include "../../win32-platform/bin/math.hpp"
 
 #include "math.c"
 #include "collision.c"
@@ -313,7 +314,7 @@ static void UpdateGameState(GameState *state, Rect pixelRect, const Input &input
 		if (!block->powerUp.exists) continue;
 
 		block->powerUp.prevPosition = block->powerUp.position;
-		block->powerUp.position = AddVector2D(block->powerUp.prevPosition, MultiplyVector2D(block->powerUp.velocity, dt));
+		block->powerUp.position = gentle::AddVectors(block->powerUp.prevPosition, gentle::MultiplyVectorByScalar(block->powerUp.velocity, dt));
 
 		// Can get away with a super simple position check for the power up falling off screen here
 		if (block->powerUp.position.y < Y_DIM_ORIGIN)
@@ -324,7 +325,13 @@ static void UpdateGameState(GameState *state, Rect pixelRect, const Input &input
 		{
 			float minCollisionTime = dt;
 			int ballCollisionResult = None;
-			CheckCollisionBetweenMovingObjects(state->player.halfSize, state->player.prevPosition, state->player.velocity, block->powerUp.halfSize, block->powerUp.prevPosition, block->powerUp.velocity, &minCollisionTime, &ballCollisionResult, &block->powerUp.position);
+			Vector2D tempPowerUpPosition = Vector2D { block->powerUp.position.x, block->powerUp.position.y };
+			Vector2D tempPowerUpPrevPosition = Vector2D { block->powerUp.prevPosition.x, block->powerUp.prevPosition.y };
+			Vector2D tempPowerUpVelocity = Vector2D { block->powerUp.velocity.x, block->powerUp.velocity.y };
+			CheckCollisionBetweenMovingObjects(state->player.halfSize, state->player.prevPosition, state->player.velocity, block->powerUp.halfSize, tempPowerUpPrevPosition, tempPowerUpVelocity, &minCollisionTime, &ballCollisionResult, &tempPowerUpPosition);
+			block->powerUp.position.x = tempPowerUpPosition.x;
+			block->powerUp.position.y = tempPowerUpPosition.y;
+
 			if (ballCollisionResult != None)
 			{
 				block->powerUp.exists = false;
@@ -396,7 +403,8 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	{
 		if (!block->powerUp.exists) continue;
 
-		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, block->powerUp.position);
+		Vector2D tempPowerUpPosition = Vector2D { block->powerUp.position.x, block->powerUp.position.y };
+		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, tempPowerUpPosition);
 	}
 
 	// Balls, Level & Score

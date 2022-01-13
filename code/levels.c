@@ -1,5 +1,8 @@
 #include "math.h"
 #include "game.h"
+#include "../../win32-platform/bin/math.hpp"
+
+const gentle::Vec2<float> POWER_UP_VELOCITY = gentle::Vec2<float> { 0.0f, -5.0f };
 
 char *levels[10] = {
 "\
@@ -101,8 +104,8 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 				{
 					case 'M':
 						block->powerUp.type = Multiball;
-						block->powerUp.prevPosition = block->position;
-						block->powerUp.position = block->position;
+						block->powerUp.prevPosition = gentle::Vec2<float> { block->position.x, block->position.y };
+						block->powerUp.position = block->powerUp.prevPosition;
 						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
 						block->powerUp.velocity = POWER_UP_VELOCITY;
 						block->powerUp.exists = false;
@@ -110,8 +113,8 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						break;
 					case 'C':
 						block->powerUp.type = Comet;
-						block->powerUp.prevPosition = block->position;
-						block->powerUp.position = block->position;
+						block->powerUp.prevPosition = gentle::Vec2<float> { block->position.x, block->position.y };
+						block->powerUp.position = block->powerUp.prevPosition;
 						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
 						block->powerUp.velocity = POWER_UP_VELOCITY;
 						block->powerUp.exists = false;
@@ -119,10 +122,10 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						break;
 					default:
 						block->powerUp.type = Nothing;
-						block->powerUp.prevPosition = ZERO_VECTOR;
-						block->powerUp.position = ZERO_VECTOR;
+						block->powerUp.prevPosition = gentle::Vec2<float> { 0.0f, 0.0f };
+						block->powerUp.position = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.halfSize = ZERO_VECTOR;
-						block->powerUp.velocity = ZERO_VECTOR;
+						block->powerUp.velocity = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.exists = false;
 						block->powerUp.color = 0x000000;
 						break;

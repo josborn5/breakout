@@ -24,7 +24,7 @@ REM 32-bit build
 REM cl %COMMON_COMPILER_FLAGS% ..\code\win32_platform.cpp /link -subsystem:windows,5.1  %COMMON_LINKER_FLAGS%
 
 REM 64-bit build
-cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\game.cpp /link %COMMON_LINKER_FLAGS% ../../win32-platform/bin/gentle_giant_win32.lib
+cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\game.cpp /link %COMMON_LINKER_FLAGS% ../../win32-platform/bin/gentle_giant_win32.lib ../../win32-platform/bin/gentle_giant.lib
 
 cl %COMMON_COMPILER_FLAGS% ..\%CODE_DIR%\tests.cpp
 POPD
