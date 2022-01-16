@@ -6,8 +6,6 @@
 
 #define ZERO_VECTOR Vector2D { 0.0f, 0.0f }
 
-#define POWER_UP_HALF_SIZE Vector2D { 0.5f, 0.5f }
-
 #include "math.h"
 #include "../../win32-platform/bin/math.hpp"
 
@@ -22,7 +20,7 @@ struct PowerUp
 {
 	gentle::Vec2<float> prevPosition;
 	gentle::Vec2<float> position;
-	Vector2D halfSize;
+	gentle::Vec2<float> halfSize;
 	gentle::Vec2<float> velocity;
 	PowerUpType type;
 	bool exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection

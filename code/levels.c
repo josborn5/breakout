@@ -3,6 +3,7 @@
 #include "../../win32-platform/bin/math.hpp"
 
 const gentle::Vec2<float> POWER_UP_VELOCITY = gentle::Vec2<float> { 0.0f, -5.0f };
+const gentle::Vec2<float> POWER_UP_HALF_SIZE = gentle::Vec2<float> { 0.5f, 0.5f };
 
 char *levels[10] = {
 "\
@@ -124,7 +125,7 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						block->powerUp.type = Nothing;
 						block->powerUp.prevPosition = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.position = gentle::Vec2<float> { 0.0f, 0.0f };
-						block->powerUp.halfSize = ZERO_VECTOR;
+						block->powerUp.halfSize = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.velocity = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.exists = false;
 						block->powerUp.color = 0x000000;

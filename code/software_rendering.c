@@ -1,5 +1,6 @@
 #include "math.h"
 #include "../../win32-platform/bin/platform.hpp"
+#include "../../win32-platform/bin/math.hpp"
 
 static void ClearScreen(const RenderBuffer &renderBuffer, uint32_t color)
 {
@@ -172,6 +173,13 @@ static void DrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t c
 	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
+}
+
+static void DrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t color, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p)
+{
+	Vector2D tempHalfSize = Vector2D { halfSize.x, halfSize.y };
+	Vector2D tempP = Vector2D { p.x, p.y };
+	DrawRect(renderBuffer, gameRect, color, tempHalfSize, tempP);
 }
 
 static void ClearScreenAndDrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)

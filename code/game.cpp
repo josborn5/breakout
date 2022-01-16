@@ -413,8 +413,7 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	{
 		if (!block->powerUp.exists) continue;
 
-		Vector2D tempPowerUpPosition = Vector2D { block->powerUp.position.x, block->powerUp.position.y };
-		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, tempPowerUpPosition);
+		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, block->powerUp.position);
 	}
 
 	// Balls, Level & Score
