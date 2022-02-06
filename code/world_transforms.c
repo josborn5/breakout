@@ -41,7 +41,7 @@ Vector2D TransformPixelCoordToGameCoord(gentle::Vec2<int> pixelRect, gentle::Vec
 	return transformed;
 }
 
-Rect TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, float x, float y)
+gentle::Vec2<int> TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, float x, float y)
 {
 	float mX;
 	float mY;
@@ -68,7 +68,7 @@ Rect TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<in
 
 	float horizontalOffset = 0.0f;
 	float verticalOffset = 0.0f;
-	Rect transformed = {0};
+	gentle::Vec2<int> transformed = {0};
 	transformed.x = (int)((x - horizontalOffset) * mX);
 	transformed.y = (int)((y - verticalOffset) * mY);
 
@@ -81,8 +81,8 @@ void TranformVectorsToPixels(gentle::Vec2<int> pixelRect, gentle::Vec2<int> game
 	float game0y = p.y - halfSize.y;
 	float game1x = p.x + halfSize.x;
 	float game1y = p.y + halfSize.y;
-	Rect pixel0 = TransformGameCoordToPixelCoord(pixelRect, gameRect, game0x, game0y);
-	Rect pixel1 = TransformGameCoordToPixelCoord(pixelRect, gameRect, game1x, game1y);
+	gentle::Vec2<int> pixel0 = TransformGameCoordToPixelCoord(pixelRect, gameRect, game0x, game0y);
+	gentle::Vec2<int> pixel1 = TransformGameCoordToPixelCoord(pixelRect, gameRect, game1x, game1y);
 
 	*x0 = pixel0.x;
 	*y0 = pixel0.y;

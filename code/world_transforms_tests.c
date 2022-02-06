@@ -88,7 +88,7 @@ static void RunWorldTransformsTests()
 	// pixel aspect ratio same as game aspect ratio
 	pixelRect = { 100, 100 };
 	gameRect = { 100, 100 };
-	Rect rectResult = TransformGameCoordToPixelCoord(pixelRect, gameRect, 50, 50);
+	gentle::Vec2<int> rectResult = TransformGameCoordToPixelCoord(pixelRect, gameRect, 50, 50);
 	printf("x is %d\n", rectResult.x);
 	printf("y is %d\n\n", rectResult.y);
 	assert(rectResult.x == 50);

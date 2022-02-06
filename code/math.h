@@ -15,11 +15,4 @@ struct
 	};
 } typedef Vector2D;
 
-struct
-{
-	int x;
-	int y;
-	float aspectRatio;
-} typedef Rect;
-
 #endif
