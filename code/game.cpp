@@ -30,6 +30,7 @@ TODO (in no particular order):
 #include "utils.h"
 #include "../../win32-platform/bin/math.hpp"
 #include "../../win32-platform/bin/collision.hpp"
+#include "../../win32-platform/bin/geometry.hpp"
 
 #include "math.c"
 #include "collision.c"
@@ -61,13 +62,13 @@ const float FONT_SIZE = 2.0f;
 const float BAT_WIDTH = 10.0f;
 const float BAT_HEIGHT = 1.0f;
 
-Rect GAME_RECT = {0};
-
 const int X_DIM_ORIGIN = 0;
 const int X_DIM_BASE = 160;
 const int Y_DIM_ORIGIN = 0;
 const int Y_DIM_BASE = 90;
 const int STARTING_LIVES = 3;
+
+gentle::Vec2<int> GAME_RECT = { X_DIM_BASE, Y_DIM_BASE };
 
 float minPlayerX;
 float maxPlayerX;
@@ -107,12 +108,8 @@ static void StartLevel(int newLevel)
 	PopulateBlocksForLevel(newLevel, gamestate.blocks, BLOCK_ARRAY_SIZE, BLOCK_AREA, BLOCK_AREA_POS);
 }
 
-static void InitializeGameState(GameState *state, Rect pixelRect, const Input &input)
+static void InitializeGameState(GameState *state, gentle::Vec2<int> pixelRect, const Input &input)
 {
-	GAME_RECT.x = X_DIM_BASE;
-	GAME_RECT.y = Y_DIM_BASE;
-	GAME_RECT.aspectRatio = ((float)X_DIM_BASE) / ((float)Y_DIM_BASE);
-
 	float worldHalfX = 0.5f * (float)X_DIM_BASE;
 	float worldHalfY = 0.5f * (float)Y_DIM_BASE;
 	worldHalfSize.x = worldHalfX;
@@ -143,7 +140,7 @@ static void InitializeGameState(GameState *state, Rect pixelRect, const Input &i
 	StartLevel(state->level);
 }
 
-static void UpdateGameState(GameState *state, Rect pixelRect, const Input &input, float dt)
+static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const Input &input, float dt)
 {
 	// Update player state
 	state->player.prevPosition.x = state->player.position.x;
@@ -434,7 +431,7 @@ void gentle::Initialize(const GameMemory &gameMemory, const RenderBuffer &render
 
 void gentle::UpdateAndRender(const GameMemory &gameMemory, const Input &input, const RenderBuffer &renderBuffer, float dt)
 {
-	Rect pixelRect = {0};
+	gentle::Vec2<int> pixelRect;
 	pixelRect.x = renderBuffer.width;
 	pixelRect.y = renderBuffer.height;
 

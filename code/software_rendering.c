@@ -164,30 +164,27 @@ static void DrawLineInPixels(const RenderBuffer &renderBuffer, uint32_t color, i
 	}
 }
 
-static void DrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
+static void DrawRect(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, uint32_t color, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	Rect pixelRect = {0};
-	pixelRect.x = renderBuffer.width;
-	pixelRect.y = renderBuffer.height;
+	gentle::Vec2<int> pixelRect = { renderBuffer.width, renderBuffer.height };
+
 	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
 }
 
-static void DrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t color, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p)
+static void DrawRect(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, uint32_t color, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p)
 {
 	Vector2D tempHalfSize = Vector2D { halfSize.x, halfSize.y };
 	Vector2D tempP = Vector2D { p.x, p.y };
 	DrawRect(renderBuffer, gameRect, color, tempHalfSize, tempP);
 }
 
-static void ClearScreenAndDrawRect(const RenderBuffer &renderBuffer, Rect gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
+static void ClearScreenAndDrawRect(const RenderBuffer &renderBuffer, const gentle::Vec2<int> gameRect, uint32_t color, uint32_t clearColor, Vector2D halfSize, Vector2D p)
 {
 	int x0, y0, x1, y1;
-	Rect pixelRect = {0};
-	pixelRect.x = renderBuffer.width;
-	pixelRect.y = renderBuffer.height;
+	gentle::Vec2<int> pixelRect = { renderBuffer.width, renderBuffer.height };
 	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
 
 	// draw the given rectangle
@@ -200,7 +197,7 @@ static void ClearScreenAndDrawRect(const RenderBuffer &renderBuffer, Rect gameRe
 	DrawRectInPixels(renderBuffer, clearColor, x0, y1, x1, renderBuffer.height);					// below rect
 }
 
-static void DrawSprite(const RenderBuffer &renderBuffer, Rect gameRect, char *sprite, Vector2D p, float blockHalfSize, uint32_t color)
+static void DrawSprite(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, char *sprite, Vector2D p, float blockHalfSize, uint32_t color)
 {
 	float originalX = p.x;
 	float originalY = p.y;
@@ -567,7 +564,7 @@ int GetLetterIndex(char c)
 	return c - 'A';
 }
 
-static void DrawAlphabetCharacters(const RenderBuffer &renderBuffer, Rect gameRect, char *text, Vector2D p, float fontSize, uint32_t color)
+static void DrawAlphabetCharacters(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, char *text, Vector2D p, float fontSize, uint32_t color)
 {
 	float blockHalfSize = fontSize / (2.0f * CHARACTER_HEIGHT);
 	float characterWidth = fontSize;
@@ -588,7 +585,7 @@ static void DrawAlphabetCharacters(const RenderBuffer &renderBuffer, Rect gameRe
 	p.x = originalX;
 }
 
-static void DrawNumber(const RenderBuffer &renderBuffer, Rect gameRect, int number, Vector2D p, float fontSize, uint32_t color)
+static void DrawNumber(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, int number, Vector2D p, float fontSize, uint32_t color)
 {
 	float blockHalfSize = fontSize / (2.0f * CHARACTER_HEIGHT);
 	float characterWidth = fontSize;

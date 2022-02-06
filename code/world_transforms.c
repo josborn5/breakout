@@ -1,4 +1,5 @@
 #include "math.h"
+#include "../../win32-platform/bin/math.hpp"
 
 int TransformGamePositionToPixelPosition(int input, float offset, float factor)
 {
@@ -6,14 +7,14 @@ int TransformGamePositionToPixelPosition(int input, float offset, float factor)
 	return transformed;
 }
 
-Vector2D TransformPixelCoordToGameCoord(Rect pixelRect, Rect gameRect, int x, int y)
+Vector2D TransformPixelCoordToGameCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, int x, int y)
 {
 	float mX;
 	float mY;
 
 	// Check the aspect ratio of the render buffer
 	float pixelAspectRatio = (float)pixelRect.x / (float)pixelRect.y;
-	float gameAspectRatio = gameRect.aspectRatio;
+	float gameAspectRatio = (float)gameRect.x / (float)gameRect.y;
 
 	if (pixelAspectRatio == gameAspectRatio)
 	{
@@ -40,14 +41,14 @@ Vector2D TransformPixelCoordToGameCoord(Rect pixelRect, Rect gameRect, int x, in
 	return transformed;
 }
 
-Rect TransformGameCoordToPixelCoord(Rect pixelRect, Rect gameRect, float x, float y)
+Rect TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, float x, float y)
 {
 	float mX;
 	float mY;
 
 	// Check the aspect ratio of the render buffer
 	float pixelAspectRatio = (float)pixelRect.x / (float)pixelRect.y;
-	float gameAspectRatio = gameRect.aspectRatio;
+	float gameAspectRatio = (float)gameRect.x / (float)gameRect.y;
 
 	if (pixelAspectRatio == gameAspectRatio)
 	{
@@ -74,7 +75,7 @@ Rect TransformGameCoordToPixelCoord(Rect pixelRect, Rect gameRect, float x, floa
 	return transformed;
 }
 
-void TranformVectorsToPixels(Rect pixelRect, Rect gameRect, Vector2D halfSize, Vector2D p, int* x0, int* y0, int* x1, int* y1)
+void TranformVectorsToPixels(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, Vector2D halfSize, Vector2D p, int* x0, int* y0, int* x1, int* y1)
 {
 	float game0x = p.x - halfSize.x;
 	float game0y = p.y - halfSize.y;
