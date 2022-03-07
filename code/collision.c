@@ -1,45 +1,6 @@
 #include "utils.h"
 #include "math.h"
 
-static bool AABBCollideCornerToCorner(Vector2D aTopRight, Vector2D aBottomLeft, Vector2D bTopRight, Vector2D bBottomLeft)
-{
-	bool verticalCollision = (bBottomLeft.y < aTopRight.y && bTopRight.y > aBottomLeft.y);
-	bool horizontalCollision = (bBottomLeft.x < aTopRight.x && bTopRight.x > aBottomLeft.x);
-	return verticalCollision && horizontalCollision;
-}
-
-static bool AABBCollideRectToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bHalfSize, Vector2D bPos)
-{
-	Vector2D bBottomLeft = SubtractVector2D(bPos, bHalfSize);	// Bottom left co-ords of b
-	Vector2D bTopRight = AddVector2D(bPos, bHalfSize);			// Top rght co-ords of b
-	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
-	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
-
-	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
-}
-
-static bool AABBCollideCornerToRect(Vector2D aHalfSize, Vector2D aPos, Vector2D bTopRight, Vector2D bBottomLeft)
-{
-	Vector2D aBottomLeft = SubtractVector2D(aPos, aHalfSize);	// Bottom left co-ords of a
-	Vector2D aTopRight = AddVector2D(aPos, aHalfSize);			// Top right co-ords of a
-
-	return AABBCollideCornerToCorner(aTopRight, aBottomLeft, bTopRight, bBottomLeft);
-}
-
-static bool AABBCollideRectToVertical(Vector2D aHalfSize, Vector2D aPos, float horizontalPos)
-{
-	return ((aPos.x + aHalfSize.x) > horizontalPos && (aPos.x - aHalfSize.x) < horizontalPos);
-}
-
-typedef enum BlockSide
-{
-	Top = 0,
-	Right = 1,
-	Bottom = 2,
-	Left = 3,
-	None = 4
-} BlockSide;
-
 static void CheckBlockAndUndersideOfWallCollision(
 	float wallYPos,
 	Vector2D ballHalfSize,
