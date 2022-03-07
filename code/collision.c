@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "math.h"
+#include "../../win32-platform/bin/collision.hpp"
 
 static void CheckBlockAndUndersideOfWallCollision(
 	float wallYPos,
@@ -20,7 +21,7 @@ static void CheckBlockAndUndersideOfWallCollision(
 	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
-		*blockResult = Bottom;
+		*blockResult = gentle::Bottom;
 		float xCollisionPos = prevBallPosition.x + (tCollision * ballVelocity.x);
 		ballPosition->x = xCollisionPos;
 		ballPosition->y = yCollisionCheckPos;
@@ -46,7 +47,7 @@ static void CheckBlockAndTopsideOfWallCollision(
 	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
-		*blockResult = Top;
+		*blockResult = gentle::Top;
 		float xCollisionPos = prevBallPosition.x + (tCollision * ballVelocity.x);
 		ballPosition->x = xCollisionPos;
 		ballPosition->y = yCollisionCheckPos;
@@ -72,7 +73,7 @@ static void CheckBlockAndLeftWallCollision(
 	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
-		*blockResult = Right;
+		*blockResult = gentle::Right;
 		float yCollisionPos = prevBallPosition.y + (tCollision * ballVelocity.y);
 		ballPosition->x = xCollisionCheckPos;
 		ballPosition->y = yCollisionPos;
@@ -98,7 +99,7 @@ static void CheckBlockAndRightWallCollision(
 	if (tCollision >= 0 && tCollision < *maxCollisionTime)
 	{
 		*maxCollisionTime = tCollision;
-		*blockResult = Left;
+		*blockResult = gentle::Left;
 		float yCollisionPos = prevBallPosition.y + (tCollision * ballVelocity.y);
 		ballPosition->x = xCollisionCheckPos;
 		ballPosition->y = yCollisionPos;
@@ -124,17 +125,17 @@ static bool CheckBlockAndBallCollision(
 
 	// Check for collision between block side and ball path
 	// 1. Top/bottom side
-	int horizontalCollisionResult = None;
+	int horizontalCollisionResult = gentle::None;
 	float yCollisionCheckPos = 0.0f;
 	if (ballVelocity.y > 0)
 	{
 		yCollisionCheckPos = blockBottomSide;
-		horizontalCollisionResult = Bottom;
+		horizontalCollisionResult = gentle::Bottom;
 	}
 	if (ballVelocity.y < 0)
 	{
 		yCollisionCheckPos = blockTopSide;
-		horizontalCollisionResult = Top;
+		horizontalCollisionResult = gentle::Top;
 	}
 
 	if (ballVelocity.y != 0)
@@ -155,17 +156,17 @@ static bool CheckBlockAndBallCollision(
 	}
 
 	// 2. Left/right side, 
-	int verticalCollisionResult = None;
+	int verticalCollisionResult = gentle::None;
 	float xCollisionCheckPos = 0.0f;
 	if (ballVelocity.x > 0)
 	{
 		xCollisionCheckPos = blockLeftSide;
-		verticalCollisionResult = Left;
+		verticalCollisionResult = gentle::Left;
 	}
 	if (ballVelocity.x < 0)
 	{
 		xCollisionCheckPos = blockRightSide;
-		verticalCollisionResult = Right;
+		verticalCollisionResult = gentle::Right;
 	}
 
 	if (ballVelocity.x != 0)
