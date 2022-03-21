@@ -30,7 +30,7 @@ struct PowerUp
 struct {
 	gentle::Vec2<float> prevPosition;
 	gentle::Vec2<float> position;
-	Vector2D halfSize;
+	gentle::Vec2<float> halfSize;
 	gentle::Vec2<float> velocity;
 } typedef Player;
 

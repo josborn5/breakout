@@ -220,9 +220,24 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 			// Check for collision between ball and bat
 			Player player = state->player;
-			Vector2D tempPlayerPrevPosition = Vector2D { player.prevPosition.x, player.prevPosition.y };
-			Vector2D tempPlayerVelocity = Vector2D { player.velocity.x, player.velocity.y };
-			bool playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, tempPlayerPrevPosition, tempPlayerVelocity, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			gentle::Vec2<float> tempBallHalfSize = gentle::Vec2<float> { state->balls[i].halfSize.x, state->balls[i].halfSize.y };
+			gentle::Vec2<float> tempBallPrevPosition = gentle::Vec2<float> { state->balls[i].prevPosition.x, state->balls[i].prevPosition.y };
+			gentle::Vec2<float> tempBallVelocity = gentle::Vec2<float> { state->balls[i].velocity.x, state->balls[i].velocity.y };
+			gentle::Vec2<float> tempBallPosition = gentle::Vec2<float> { state->balls[i].position.x, state->balls[i].position.y };
+
+			bool playerCollision = gentle::CheckCollisionBetweenMovingRects<float>(
+				player.halfSize,
+				player.prevPosition,
+				player.velocity,
+				tempBallHalfSize,
+				tempBallPrevPosition,
+				tempBallVelocity,
+				&minCollisionTime,
+				&(gentle::CollisionSide)ballCollisionResult,
+				&tempBallPosition);
+			// bool playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, tempPlayerPrevPosition, tempPlayerVelocity, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			state->balls[i].position.x = tempBallPosition.x;
+			state->balls[i].position.y = tempBallPosition.y;
 			bool blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
 
 			checkCollision = (ballCollisionResult != gentle::None);
@@ -384,8 +399,7 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	ClearScreenAndDrawRect(renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
 
 	// player
-	Vector2D tempPlayerPosition = Vector2D { state.player.position.x, state.player.position.y };
-	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, state.player.halfSize, tempPlayerPosition);
+	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, state.player.halfSize, state.player.position);
 
 	// blocks
 	allBlocksCleared = true;
