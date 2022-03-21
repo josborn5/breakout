@@ -43,8 +43,8 @@ struct {
 } typedef Ball;
 
 struct {
-	Vector2D position;
-	Vector2D halfSize;
+	gentle::Vec2<float> position;
+	gentle::Vec2<float> halfSize;
 	int color;
 	bool exists;
 	PowerUp powerUp;

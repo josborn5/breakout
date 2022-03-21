@@ -24,11 +24,11 @@ CCCCCCCCCCCC",
      MM"
 };
 
-static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, Vector2D blockArea, Vector2D blockAreaPosition)
+static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, gentle::Vec2<float> blockArea, gentle::Vec2<float> blockAreaPosition)
 {
 	// clear out any remaining blocks in the block array
 	Block* firstBlock = block;
-	Vector2D originVector = Vector2D { 0.0f, 0.0f };
+	gentle::Vec2<float> originVector = gentle::Vec2<float> { 0.0f, 0.0f };
 	for (int i = 0; i < blockArraySize; i += 1)
 	{
 		firstBlock->exists = 0;
@@ -77,12 +77,12 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 	// Calculate the block size from the row & column counts
 	float blockHeight = blockArea.y / (float)rowCount;
 	float blockWidth = blockArea.x / (float)columnCount;
-	Vector2D blockHalfSize;
+	gentle::Vec2<float> blockHalfSize;
 	blockHalfSize.x = 0.5f * blockWidth;
 	blockHalfSize.y = 0.5f * blockHeight;
 
 	int blockCount = 0;
-	Vector2D blockPosition = blockAreaPosition;
+	gentle::Vec2<float> blockPosition = blockAreaPosition;
 	blockPosition.x += blockHalfSize.x;
 	blockPosition.y -= blockHalfSize.y;
 	float originalX = blockPosition.x;

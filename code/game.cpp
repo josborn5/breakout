@@ -40,8 +40,8 @@ TODO (in no particular order):
 #include "levels.c"
 #include "main_win32.cpp"
 
-#define BLOCK_AREA Vector2D { 100.0f, 20.0f }
-#define BLOCK_AREA_POS Vector2D { 30.0f, 70.0f }
+#define BLOCK_AREA gentle::Vec2<float> { 100.0f, 20.0f }
+#define BLOCK_AREA_POS gentle::Vec2<float> { 30.0f, 70.0f }
 #define BALL_HALF_SIZE Vector2D { 1.0f, 1.0f }
 
 const float MIN_BALL_SPEED = 40.0f;
@@ -205,13 +205,17 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 			int blockHitIndex = NO_BLOCK_HIT_INDEX;
 
+			gentle::Vec2<float> tempBallHalfSize = gentle::Vec2<float> { state->balls[i].halfSize.x, state->balls[i].halfSize.y };
+			gentle::Vec2<float> tempBallPrevPosition = gentle::Vec2<float> { state->balls[i].prevPosition.x, state->balls[i].prevPosition.y };
+			gentle::Vec2<float> tempBallVelocity = gentle::Vec2<float> { state->balls[i].velocity.x, state->balls[i].velocity.y };
+			gentle::Vec2<float> tempBallPosition = gentle::Vec2<float> { state->balls[i].position.x, state->balls[i].position.y };
+
 			// check for collision between ball and blocks
 			for (int j = 0; j < ArrayCount(state->blocks); j += 1)
 			{
 				Block *block = &state->blocks[j];
 				if (!block->exists) continue;
-
-				bool collided = CheckBlockAndBallCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+				bool collided = CheckStaticAndMovingRectCollision(block->halfSize, block->position, tempBallHalfSize, tempBallPrevPosition, tempBallVelocity, &minCollisionTime, &(gentle::CollisionSide)ballCollisionResult, &tempBallPosition);
 				if (collided)
 				{
 					blockHitIndex = j;
@@ -220,10 +224,6 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 			// Check for collision between ball and bat
 			Player player = state->player;
-			gentle::Vec2<float> tempBallHalfSize = gentle::Vec2<float> { state->balls[i].halfSize.x, state->balls[i].halfSize.y };
-			gentle::Vec2<float> tempBallPrevPosition = gentle::Vec2<float> { state->balls[i].prevPosition.x, state->balls[i].prevPosition.y };
-			gentle::Vec2<float> tempBallVelocity = gentle::Vec2<float> { state->balls[i].velocity.x, state->balls[i].velocity.y };
-			gentle::Vec2<float> tempBallPosition = gentle::Vec2<float> { state->balls[i].position.x, state->balls[i].position.y };
 
 			bool playerCollision = gentle::CheckCollisionBetweenMovingRects<float>(
 				player.halfSize,
