@@ -2,7 +2,6 @@
 
 TODO (in no particular order):
 
--- Multi-ball power up
 -- Visual effects for power ups
 
 -- Clean up the ball speed slow down logic. We're doing a lot of operations here that I think could be simplified.
@@ -33,7 +32,6 @@ TODO (in no particular order):
 #include "../../win32-platform/bin/geometry.hpp"
 
 #include "math.c"
-#include "collision.c"
 #include "world_transforms.c"
 #include "software_rendering.c"
 #include "platform_common.c"
@@ -42,7 +40,7 @@ TODO (in no particular order):
 
 #define BLOCK_AREA gentle::Vec2<float> { 100.0f, 20.0f }
 #define BLOCK_AREA_POS gentle::Vec2<float> { 30.0f, 70.0f }
-#define BALL_HALF_SIZE Vector2D { 1.0f, 1.0f }
+#define BALL_HALF_SIZE gentle::Vec2<float> { 1.0f, 1.0f }
 
 const float MIN_BALL_SPEED = 40.0f;
 const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
@@ -156,7 +154,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		float minCollisionTime = dt;
 		float t1 = dt;
 		float t0 = 0.0f;
-		int ballCollisionResult = gentle::None;
+		gentle::CollisionSide ballCollisionResult = gentle::None;
 		int collisionCheckCount = 0;
 		int maxCollisionCheckCount = 4;
 		bool checkCollision = true;
@@ -165,10 +163,10 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		{
 			// cache the previous position
 			state->balls[i].prevPosition = state->balls[i].position;
-			state->balls[i].position = AddVector2D(state->balls[i].prevPosition, MultiplyVector2D(state->balls[i].velocity, t1 - t0));
+			state->balls[i].position = gentle::AddVectors(state->balls[i].prevPosition, gentle::MultiplyVectorByScalar(state->balls[i].velocity, t1 - t0));
 
 			// Check for collision between any boundary of the world
-			CheckBlockAndTopsideOfWallCollision((float)Y_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			gentle::CheckRectAndXLineCollisionFromPositiveY((float)Y_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
 			if (ballCollisionResult != gentle::None)
 			{
 				state->balls[i].exists = false;
@@ -199,23 +197,18 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 				}
 			}
 
-			CheckBlockAndUndersideOfWallCollision((float)Y_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			CheckBlockAndLeftWallCollision((float)X_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			CheckBlockAndRightWallCollision((float)X_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			gentle::CheckRectAndXLineCollisionFromNegativeY((float)Y_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			gentle::CheckRectAndYLineCollisionFromPositiveX((float)X_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
+			gentle::CheckRectAndYLineCollisionFromNegativeX((float)X_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
 
 			int blockHitIndex = NO_BLOCK_HIT_INDEX;
-
-			gentle::Vec2<float> tempBallHalfSize = gentle::Vec2<float> { state->balls[i].halfSize.x, state->balls[i].halfSize.y };
-			gentle::Vec2<float> tempBallPrevPosition = gentle::Vec2<float> { state->balls[i].prevPosition.x, state->balls[i].prevPosition.y };
-			gentle::Vec2<float> tempBallVelocity = gentle::Vec2<float> { state->balls[i].velocity.x, state->balls[i].velocity.y };
-			gentle::Vec2<float> tempBallPosition = gentle::Vec2<float> { state->balls[i].position.x, state->balls[i].position.y };
 
 			// check for collision between ball and blocks
 			for (int j = 0; j < ArrayCount(state->blocks); j += 1)
 			{
 				Block *block = &state->blocks[j];
 				if (!block->exists) continue;
-				bool collided = CheckStaticAndMovingRectCollision(block->halfSize, block->position, tempBallHalfSize, tempBallPrevPosition, tempBallVelocity, &minCollisionTime, &(gentle::CollisionSide)ballCollisionResult, &tempBallPosition);
+				bool collided = CheckStaticAndMovingRectCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &(gentle::CollisionSide)ballCollisionResult, &state->balls[i].position);
 				if (collided)
 				{
 					blockHitIndex = j;
@@ -229,17 +222,14 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 				player.halfSize,
 				player.prevPosition,
 				player.velocity,
-				tempBallHalfSize,
-				tempBallPrevPosition,
-				tempBallVelocity,
+				state->balls[i].halfSize,
+				state->balls[i].prevPosition,
+				state->balls[i].velocity,
 				&minCollisionTime,
 				&(gentle::CollisionSide)ballCollisionResult,
-				&tempBallPosition);
-			// bool playerCollision = CheckCollisionBetweenMovingObjects(player.halfSize, tempPlayerPrevPosition, tempPlayerVelocity, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			state->balls[i].position.x = tempBallPosition.x;
-			state->balls[i].position.y = tempBallPosition.y;
-			bool blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
+				&state->balls[i].position);
 
+			bool blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
 			checkCollision = (ballCollisionResult != gentle::None);
 			if (checkCollision)
 			{
@@ -254,7 +244,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 					{
 						// Add a horizontal velocity to allow player to change ball direction
 						float ballAngleFromNormal = GetThetaForBallPlayerCollision(player.position.x, state->balls[i].position.x, player.halfSize.x);
-						float ballSpeed = GetVectorMagnitude(state->balls[i].velocity);
+						float ballSpeed = gentle::Length(state->balls[i].velocity);
 						state->balls[i].velocity.x = (float)sin(ballAngleFromNormal) * ballSpeed;
 						state->balls[i].velocity.y = (float)cos(ballAngleFromNormal) * ballSpeed;
 					}
@@ -307,7 +297,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
 		// add some air resistance so ball slows down to normal speed after a while
-		float ballSpeed = GetVectorMagnitude(state->balls[i].velocity);
+		float ballSpeed = gentle::Length(state->balls[i].velocity);
 		if (ballSpeed > minBallSpeed)
 		{
 			float dSpeed = ballSpeed - (0.995f * ballSpeed);
@@ -386,7 +376,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		}
 	}
 
-	if (allBlocksCleared && (GetVectorMagnitude(state->balls[0].velocity) < LEVEL_CHANGE_BALL_SPEED))
+	if (allBlocksCleared && (gentle::Length(state->balls[0].velocity) < LEVEL_CHANGE_BALL_SPEED))
 	{
 		state->level += 1;
 		StartLevel(state->level);

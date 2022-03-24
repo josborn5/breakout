@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <math.h>
 #include "utils.h"
 #include "math.h"
 
@@ -44,35 +43,6 @@ static float ClampFloat(float min, float val, float max)
 static uint32_t MakeColorFromGrey(uint8_t grey)
 {
 	return (grey << 0) | (grey << 8) | (grey << 16);
-}
-
-static Vector2D AddVector2D(Vector2D a, Vector2D b)
-{
-	Vector2D v;
-	v.x = a.x + b.x;
-	v.y = a.y + b.y;
-	return v;
-}
-
-static Vector2D SubtractVector2D(Vector2D a, Vector2D b)
-{
-	Vector2D v;
-	v.x = a.x - b.x;
-	v.y = a.y - b.y;
-	return v;
-}
-
-static Vector2D MultiplyVector2D(Vector2D a, float scalar)
-{
-	Vector2D v;
-	v.x = scalar * a.x;
-	v.y = scalar * a.y;
-	return v;
-}
-
-static float GetVectorMagnitude(Vector2D vector)
-{
-	return (float)sqrt((vector.x * vector.x) + (vector.y * vector.y));
 }
 
 static float GetThetaForBallPlayerCollision(float playerPositionX, float ballPositionX, float playerHalfSizeX)

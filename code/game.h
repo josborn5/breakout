@@ -4,7 +4,7 @@
 #define BLOCK_ARRAY_SIZE 64
 #define BALL_ARRAY_SIZE 3
 
-#define ZERO_VECTOR Vector2D { 0.0f, 0.0f }
+#define ZERO_VECTOR gentle::Vec2<float> { 0.0f, 0.0f }
 
 #include "math.h"
 #include "../../win32-platform/bin/math.hpp"
@@ -35,10 +35,10 @@ struct {
 } typedef Player;
 
 struct {
-	Vector2D prevPosition;
-	Vector2D position;
-	Vector2D halfSize;
-	Vector2D velocity;
+	gentle::Vec2<float> prevPosition;
+	gentle::Vec2<float> position;
+	gentle::Vec2<float> halfSize;
+	gentle::Vec2<float> velocity;
 	bool exists;
 } typedef Ball;
 

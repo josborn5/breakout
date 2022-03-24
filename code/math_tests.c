@@ -1,4 +1,5 @@
 #include <assert.h>
+#include "math.c"
 
 static void RunGetThetaForBallPlayerCollisionTest(float playerPosX, float ballPosX, float playerHalfSizeX, float expectedResult)
 {
