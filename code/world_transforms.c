@@ -1,4 +1,3 @@
-#include "math.h"
 #include "../../win32-platform/bin/math.hpp"
 
 int TransformGamePositionToPixelPosition(int input, float offset, float factor)
@@ -7,7 +6,7 @@ int TransformGamePositionToPixelPosition(int input, float offset, float factor)
 	return transformed;
 }
 
-Vector2D TransformPixelCoordToGameCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, int x, int y)
+gentle::Vec2<float> TransformPixelCoordToGameCoord(const gentle::Vec2<int> &pixelRect, const gentle::Vec2<int> &gameRect, int x, int y)
 {
 	float mX;
 	float mY;
@@ -34,14 +33,14 @@ Vector2D TransformPixelCoordToGameCoord(gentle::Vec2<int> pixelRect, gentle::Vec
 
 	float horizontalOffset = 0.0f;
 	float verticalOffset = 0.0f;
-	Vector2D transformed;
+	gentle::Vec2<float> transformed;
 	transformed.x = (x - horizontalOffset) * mX;
 	transformed.y = (y - verticalOffset) * mY;
 
 	return transformed;
 }
 
-gentle::Vec2<int> TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, float x, float y)
+gentle::Vec2<int> TransformGameCoordToPixelCoord(const gentle::Vec2<int> &pixelRect, const gentle::Vec2<int> &gameRect, float x, float y)
 {
 	float mX;
 	float mY;
@@ -75,7 +74,7 @@ gentle::Vec2<int> TransformGameCoordToPixelCoord(gentle::Vec2<int> pixelRect, ge
 	return transformed;
 }
 
-void TranformVectorsToPixels(gentle::Vec2<int> pixelRect, gentle::Vec2<int> gameRect, Vector2D halfSize, Vector2D p, int* x0, int* y0, int* x1, int* y1)
+void TranformVectorsToPixels(const gentle::Vec2<int> &pixelRect, const gentle::Vec2<int> &gameRect, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p, int* x0, int* y0, int* x1, int* y1)
 {
 	float game0x = p.x - halfSize.x;
 	float game0y = p.y - halfSize.y;

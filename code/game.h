@@ -6,7 +6,6 @@
 
 #define ZERO_VECTOR gentle::Vec2<float> { 0.0f, 0.0f }
 
-#include "math.h"
 #include "../../win32-platform/bin/math.hpp"
 
 typedef enum PowerUpType

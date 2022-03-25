@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "math.h"
 #include "world_transforms.c"
 #include "../../win32-platform/bin/math.hpp"
 
@@ -15,7 +14,7 @@ static void RunWorldTransformsTests()
 	// pixel aspect ratio same as game aspect ratio
 	gentle::Vec2<int> pixelRect = { 1280, 720 };
 	gentle::Vec2<int> gameRect = { 160, 90 };
-	Vector2D vectorResult = TransformPixelCoordToGameCoord(pixelRect, gameRect, 1280, 720);
+	gentle::Vec2<float> vectorResult = TransformPixelCoordToGameCoord(pixelRect, gameRect, 1280, 720);
 	printf("x is %f\n", vectorResult.x);
 	printf("y is %f\n\n", vectorResult.y);
 	assert(vectorResult.x == 160);

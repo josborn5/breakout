@@ -22,7 +22,6 @@ TODO (in no particular order):
 
 */
 
-#include "math.h"
 #include "game.h"
 #include "../../win32-platform/bin/platform.hpp"
 #include "../../win32-platform/bin/game.hpp"
@@ -71,8 +70,8 @@ gentle::Vec2<int> GAME_RECT = { X_DIM_BASE, Y_DIM_BASE };
 float minPlayerX;
 float maxPlayerX;
 
-Vector2D worldPosition = {0};
-Vector2D worldHalfSize = {0};
+gentle::Vec2<float> worldPosition = ZERO_VECTOR;
+gentle::Vec2<float> worldHalfSize = ZERO_VECTOR;
 
 GameState gamestate = {0};
 
@@ -418,14 +417,14 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	}
 
 	// Balls, Level & Score
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", Vector2D { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.lives, Vector2D { 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", gentle::Vec2<float> { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.lives, gentle::Vec2<float> { 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", Vector2D { 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.level, Vector2D { 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", gentle::Vec2<float> { 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.level, gentle::Vec2<float> { 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", Vector2D { 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.score, Vector2D { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", gentle::Vec2<float> { 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.score, gentle::Vec2<float> { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
 }
 
 void gentle::Initialize(const GameMemory &gameMemory, const RenderBuffer &renderBuffer)

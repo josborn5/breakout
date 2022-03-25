@@ -1,4 +1,3 @@
-#include "math.h"
 #include "game.h"
 #include "../../win32-platform/bin/math.hpp"
 
