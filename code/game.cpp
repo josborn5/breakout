@@ -215,7 +215,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 			}
 
 			// Check for collision between ball and bat
-			Player player = state->player;
+			gentle::Rect<float> player = state->player;
 
 			bool playerCollision = gentle::CheckCollisionBetweenMovingRects<float>(
 				player.halfSize,

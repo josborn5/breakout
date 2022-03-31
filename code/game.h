@@ -6,7 +6,7 @@
 
 #define ZERO_VECTOR gentle::Vec2<float> { 0.0f, 0.0f }
 
-#include "../../win32-platform/bin/math.hpp"
+#include "../../win32-platform/bin/geometry.hpp"
 
 typedef enum PowerUpType
 {
@@ -15,42 +15,25 @@ typedef enum PowerUpType
 	Comet = 2
 } PowerUpType;
 
-struct PowerUp
+struct PowerUp : gentle::Rect<float>
 {
-	gentle::Vec2<float> prevPosition;
-	gentle::Vec2<float> position;
-	gentle::Vec2<float> halfSize;
-	gentle::Vec2<float> velocity;
 	PowerUpType type;
 	bool exists;		// flips to true when the block containing it is hit. i.e. it's a flag to render the power-up and include it in collision detection
 	int color;
 };
 
-struct {
-	gentle::Vec2<float> prevPosition;
-	gentle::Vec2<float> position;
-	gentle::Vec2<float> halfSize;
-	gentle::Vec2<float> velocity;
-} typedef Player;
-
-struct {
-	gentle::Vec2<float> prevPosition;
-	gentle::Vec2<float> position;
-	gentle::Vec2<float> halfSize;
-	gentle::Vec2<float> velocity;
+struct Ball : gentle::Rect<float> {
 	bool exists;
-} typedef Ball;
+};
 
-struct {
-	gentle::Vec2<float> position;
-	gentle::Vec2<float> halfSize;
+struct Block : gentle::Rect<float> {
 	int color;
 	bool exists;
 	PowerUp powerUp;
-} typedef Block;
+};
 
 struct {
-	Player player;
+	gentle::Rect<float> player;
 	Ball balls[BALL_ARRAY_SIZE];
 	Block blocks[BLOCK_ARRAY_SIZE];
 	bool isCometActive;
