@@ -328,13 +328,11 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		{
 			float minCollisionTime = dt;
 			gentle::CollisionSide ballCollisionResult = gentle::None;
-			gentle::Vec2<float> tempPowerUpHalfSize = gentle::Vec2<float> { block->powerUp.halfSize.x, block->powerUp.halfSize.y };
-			gentle::Vec2<float> tempPlayerHalfSize = gentle::Vec2<float> { state->player.halfSize.x, state->player.halfSize.y };
 			gentle::CheckCollisionBetweenMovingRects(
-				tempPlayerHalfSize,
+				state->player.halfSize,
 				state->player.prevPosition,
 				state->player.velocity,
-				tempPowerUpHalfSize,
+				block->powerUp.halfSize,
 				block->powerUp.prevPosition,
 				block->powerUp.velocity,
 				&minCollisionTime,
