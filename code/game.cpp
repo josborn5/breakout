@@ -65,6 +65,11 @@ const int Y_DIM_ORIGIN = 0;
 const int Y_DIM_BASE = 90;
 const int STARTING_LIVES = 3;
 
+const Boundary topBoundary = { Top, Y_DIM_BASE };
+const Boundary bottomBoundary = { Bottom, Y_DIM_ORIGIN };
+const Boundary leftBoundary = { Left, X_DIM_ORIGIN };
+const Boundary rightBoundary = { Right, X_DIM_BASE };
+
 gentle::Vec2<int> GAME_RECT = { X_DIM_BASE, Y_DIM_BASE };
 
 float minPlayerX;
@@ -80,6 +85,12 @@ bool isPaused = false;
 bool allBlocksCleared = false;;
 
 char debugStringBuffer[256];
+
+struct WallCollision
+{
+	Boundary wall;
+	gentle::CollisionResult result;
+};
 
 static void ResetBalls()
 {
@@ -137,6 +148,40 @@ static void InitializeGameState(GameState *state, gentle::Vec2<int> pixelRect, c
 	StartLevel(state->level);
 }
 
+static WallCollision CheckWallCollision(const Ball &ball, float minimumTime)
+{
+	float finalCollisionTime = minimumTime;
+	WallCollision wallCollision;
+
+	Boundary horizontalWalls[2] = { topBoundary, bottomBoundary };
+	for (int i = 0; i < 2; i += 1)
+	{
+		Boundary wall = horizontalWalls[i];
+		gentle::CollisionResult wallCollisionResult = gentle::CheckRectAndXLineCollision(wall.position, ball, finalCollisionTime);
+		if (wallCollisionResult.collisions[0].side != gentle::None)
+		{
+			wallCollision.result = wallCollisionResult;
+			wallCollision.wall = wall;
+			finalCollisionTime = wallCollisionResult.time;
+		}
+	}
+
+	Boundary verticalWalls[2] = { leftBoundary, rightBoundary };
+	for (int i = 0; i < 2; i += 1)
+	{
+		Boundary wall = verticalWalls[i];
+		gentle::CollisionResult wallCollisionResult = gentle::CheckRectAndYLineCollision(wall.position, ball, finalCollisionTime);
+		if (wallCollisionResult.collisions[0].side != gentle::None)
+		{
+			wallCollision.result = wallCollisionResult;
+			wallCollision.wall = wall;
+			finalCollisionTime = wallCollisionResult.time;
+		}
+	}
+
+	return wallCollision;
+}
+
 static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const Input &input, float dt)
 {
 	// Update player state
@@ -149,7 +194,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	for (int i = 0; i < BALL_ARRAY_SIZE; i += 1)
 	{
 		if (!state->balls[i].exists) continue;
-		
+
 		float minCollisionTime = dt;
 		float t1 = dt;
 		float t0 = 0.0f;
@@ -160,45 +205,51 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 		while(checkCollision && collisionCheckCount < maxCollisionCheckCount)
 		{
+			checkCollision = false;
 			// cache the previous position
 			state->balls[i].prevPosition = state->balls[i].position;
 			state->balls[i].position = gentle::AddVectors(state->balls[i].prevPosition, gentle::MultiplyVectorByScalar(state->balls[i].velocity, t1 - t0));
 
 			// Check for collision between any boundary of the world
-			gentle::CheckRectAndXLineCollisionFromPositiveY((float)Y_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			if (ballCollisionResult != gentle::None)
+			WallCollision wallCollision = CheckWallCollision(state->balls[i], minCollisionTime);
+			if (wallCollision.result.collisions[0].side != gentle::None)
 			{
-				state->balls[i].exists = false;
+				minCollisionTime = wallCollision.result.time;
+				ballCollisionResult = wallCollision.result.collisions[0].side;
+				state->balls[i].position = wallCollision.result.collisions[0].position;
+				checkCollision = true;
 
-				bool anyBallsLeft = false;
-				for (int j = 0; j < BALL_ARRAY_SIZE; j += 1)
+				if (wallCollision.wall.side == Bottom)
 				{
-					if (state->balls[j].exists)
-					{
-						anyBallsLeft = true;
-					}
-				}
+					state->balls[i].exists = false;
 
-				if (!anyBallsLeft)
-				{
-					state->lives -= 1;
+					bool anyBallsLeft = false;
+					for (int j = 0; j < BALL_ARRAY_SIZE; j += 1)
+					{
+						if (state->balls[j].exists)
+						{
+							anyBallsLeft = true;
+						}
+					}
 
-					if (state->lives <= 0)
+					if (!anyBallsLeft)
 					{
-						initialized = false; // TODO: GAMEOVER. For now, restart.
-						return;
+						state->lives -= 1;
+
+						if (state->lives <= 0)
+						{
+							initialized = false; // TODO: GAMEOVER. For now, restart.
+							return;
+						}
+						else
+						{
+							ResetBalls();
+							return;
+						}
 					}
-					else
-					{
-						ResetBalls();
-						return;
-					}
+					continue; // Ball is gone so don't check for anymore collisions with it
 				}
 			}
-
-			gentle::CheckRectAndXLineCollisionFromNegativeY((float)Y_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			gentle::CheckRectAndYLineCollisionFromPositiveX((float)X_DIM_ORIGIN, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
-			gentle::CheckRectAndYLineCollisionFromNegativeX((float)X_DIM_BASE, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &ballCollisionResult, &state->balls[i].position);
 
 			int blockHitIndex = NO_BLOCK_HIT_INDEX;
 
@@ -207,30 +258,38 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 			{
 				Block *block = &state->blocks[j];
 				if (!block->exists) continue;
-				bool collided = CheckStaticAndMovingRectCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, &minCollisionTime, &(gentle::CollisionSide)ballCollisionResult, &state->balls[i].position);
-				if (collided)
+				gentle::CollisionResult blockCollisionResult = CheckStaticAndMovingRectCollision(block->halfSize, block->position, state->balls[i].halfSize, state->balls[i].prevPosition, state->balls[i].velocity, minCollisionTime);
+				if (blockCollisionResult.collisions[0].side != gentle::None)
 				{
 					blockHitIndex = j;
+					ballCollisionResult = blockCollisionResult.collisions[0].side;
+					state->balls[i].position = blockCollisionResult.collisions[0].position;
+					minCollisionTime = blockCollisionResult.time;
+					checkCollision = true;
 				}
 			}
 
 			// Check for collision between ball and bat
 			gentle::Rect<float> player = state->player;
 
-			bool playerCollision = gentle::CheckCollisionBetweenMovingRects<float>(
+			gentle::CollisionResult ballBatCollisionResult = gentle::CheckCollisionBetweenMovingRects(
 				player.halfSize,
 				player.prevPosition,
 				player.velocity,
 				state->balls[i].halfSize,
 				state->balls[i].prevPosition,
 				state->balls[i].velocity,
-				&minCollisionTime,
-				&(gentle::CollisionSide)ballCollisionResult,
-				&state->balls[i].position);
+				minCollisionTime);
 
-			bool blockCollision = blockHitIndex != NO_BLOCK_HIT_INDEX;
-			checkCollision = (ballCollisionResult != gentle::None);
-			if (checkCollision)
+			bool blockCollision = (blockHitIndex != NO_BLOCK_HIT_INDEX);
+			bool playerCollision = (ballBatCollisionResult.collisions[0].side != gentle::None);
+			if (playerCollision)
+			{
+				ballCollisionResult = ballBatCollisionResult.collisions[0].side;
+				state->balls[i].position = ballBatCollisionResult.collisions[0].position;
+				minCollisionTime = ballBatCollisionResult.time;
+			}
+			if (checkCollision || playerCollision)
 			{
 				if (ballCollisionResult == gentle::Top || ballCollisionResult == gentle::Bottom)
 				{
@@ -328,20 +387,19 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		{
 			float minCollisionTime = dt;
 			gentle::CollisionSide ballCollisionResult = gentle::None;
-			gentle::CheckCollisionBetweenMovingRects(
+			gentle::CollisionResult powerUpCollision = gentle::CheckCollisionBetweenMovingRects(
 				state->player.halfSize,
 				state->player.prevPosition,
 				state->player.velocity,
 				block->powerUp.halfSize,
 				block->powerUp.prevPosition,
 				block->powerUp.velocity,
-				&minCollisionTime,
-				&ballCollisionResult,
-				&block->powerUp.position
-			);
+				minCollisionTime);
 
-			if (ballCollisionResult != gentle::None)
+			if (powerUpCollision.collisions[0].side != gentle::None)
 			{
+				minCollisionTime = powerUpCollision.time;
+				ballCollisionResult = powerUpCollision.collisions[0].side;
 				block->powerUp.exists = false;
 
 				switch (block->powerUp.type)

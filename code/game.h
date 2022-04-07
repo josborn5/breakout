@@ -15,6 +15,20 @@ typedef enum PowerUpType
 	Comet = 2
 } PowerUpType;
 
+enum Side
+{
+	Top,
+	Bottom,
+	Left,
+	Right
+};
+
+struct Boundary
+{
+	Side side;
+	float position;
+};
+
 struct PowerUp : gentle::Rect<float>
 {
 	PowerUpType type;
