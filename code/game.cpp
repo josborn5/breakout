@@ -118,6 +118,7 @@ static void StartLevel(int newLevel)
 
 static void InitializeGameState(GameState *state, gentle::Vec2<int> pixelRect, const Input &input)
 {
+	state->mode = ReadyToStart;
 	float worldHalfX = 0.5f * (float)X_DIM_BASE;
 	float worldHalfY = 0.5f * (float)Y_DIM_BASE;
 	worldHalfSize.x = worldHalfX;
@@ -184,6 +185,15 @@ static WallCollision CheckWallCollision(const Ball &ball, float minimumTime)
 
 static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const Input &input, float dt)
 {
+	if (state->mode == ReadyToStart)
+	{
+		if (IsReleased(input, KEY_S))
+		{
+			state->mode = Started;
+		}
+		return;
+	}
+
 	// Update player state
 	state->player.prevPosition.x = state->player.position.x;
 	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
@@ -422,6 +432,14 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 
 static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &state)
 {
+	if (state.mode == ReadyToStart)
+	{
+		ClearScreen(renderBuffer, 0x050505);
+		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "PRESS S TO START", gentle::Vec2<float> { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+
+		return;
+	}
+
 	// background
 	ClearScreenAndDrawRect(renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
 
@@ -485,7 +503,6 @@ void gentle::UpdateAndRender(const GameMemory &gameMemory, const Input &input, c
 	{
 		initialized = true;
 		InitializeGameState(&gamestate, pixelRect, input);
-		return;
 	}
 
 	if (IsReleased(input, KEY_SPACE))

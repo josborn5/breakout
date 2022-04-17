@@ -23,6 +23,14 @@ enum Side
 	Right
 };
 
+enum Mode
+{
+	ReadyToStart,
+	Started,
+	StartingNextLevel,
+	GameOver
+};
+
 struct Boundary
 {
 	Side side;
@@ -54,6 +62,7 @@ struct {
 	int level;
 	int score;
 	int lives;
+	Mode mode;
 } typedef GameState;
 
 #endif
