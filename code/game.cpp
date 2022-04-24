@@ -253,7 +253,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 			Ball newBallState;
 			newBallState.velocity = state->balls[i].velocity;
 			newBallState.halfSize = state->balls[i].halfSize;
-			newBallState.exists = true;
+			newBallState.exists = state->balls[i].exists;
 			if (ballBatCollisionResult.collisions[1].side != gentle::None)
 			{
 				newBallState.position = ballBatCollisionResult.collisions[1].position;
@@ -319,9 +319,9 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 					newBallState.exists = false;
 
 					bool anyBallsLeft = false;
-					for (int j = 0; j < BALL_ARRAY_SIZE; j += 1)
+					for (int k = 0; k < BALL_ARRAY_SIZE && !anyBallsLeft; k += 1)
 					{
-						if (state->balls[j].exists)
+						if (state->balls[k].exists)
 						{
 							anyBallsLeft = true;
 						}
