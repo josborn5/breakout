@@ -14,7 +14,7 @@ TODO (in no particular order):
 
 -- Once measuring is in place, see where optimization is needed.
 
--- Intro screen and inter-level screen
+-- Inter-level screen
 
 -- Sound! Check out the JavidX9 youtube videos for some ideas on how to implement this.
 
@@ -49,13 +49,13 @@ const uint32_t BALL_COLOR = 0x0000FF;
 const uint32_t BAT_COLOR = 0x00FF00;
 const uint32_t BLOCK_COLOR = 0xFFFF00;
 const uint32_t TEXT_COLOR = 0xFFFF00;
-
 const int BLOCK_SCORE = 10;
 const int NO_BLOCK_HIT_INDEX = -1;
 
 const float BLOCK_WIDTH = 6.0f;
 const float BLOCK_HEIGHT = 3.0f;
-const float FONT_SIZE = 2.0f;
+const float SMALL_FONT_SIZE = 2.0f;
+const float TITLE_FONT_SIZE = 12.0f;
 const float BAT_WIDTH = 10.0f;
 const float BAT_HEIGHT = 1.0f;
 
@@ -72,6 +72,7 @@ const Boundary rightBoundary = { Right, X_DIM_BASE };
 
 gentle::Vec2<int> GAME_RECT = { X_DIM_BASE, Y_DIM_BASE };
 
+int rainbowColor = 0;
 float minPlayerX;
 float maxPlayerX;
 
@@ -435,7 +436,45 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	if (state.mode == ReadyToStart)
 	{
 		ClearScreen(renderBuffer, 0x050505);
-		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "PRESS S TO START", gentle::Vec2<float> { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+
+		if (rainbowColor == (255 * 4))
+		{
+			rainbowColor = 0;
+		}
+		// Red inc, Green min, Blue dec
+		// Red max, Green inc, Blue min
+		// Red dec, Green max, Blue inc
+		// Red min, Green dec, Blue max
+		rainbowColor += 5;
+		int rValue, gValue, bValue;
+		if (rainbowColor < 255)
+		{
+			rValue = ClampInt(0, rainbowColor, 255);
+			gValue = 0;
+			bValue = ClampInt(0, -(rainbowColor - 255), 255);
+		}
+		else if (rainbowColor < (255 * 2))
+		{
+			rValue = 255;
+			gValue = ClampInt(0, (255 * 2) - rainbowColor, 255);
+			bValue = 0;
+		}
+		else if (rainbowColor < (255 * 3))
+		{
+			rValue = ClampInt(0, -(rainbowColor - (255 * 3)), 255);
+			gValue = 255;
+			bValue = ClampInt(0, (255 * 3) - rainbowColor, 255);
+		}
+		else
+		{
+			rValue = 0;
+			gValue = ClampInt(0, -(rainbowColor - (255 * 4)), 255);
+			bValue = 255;
+		}
+		uint32_t rainbowValue = (rValue << 16) | (gValue << 8) | (bValue << 0);
+		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BREAKOUT", gentle::Vec2<float> { 40.0f, 50.0f}, TITLE_FONT_SIZE, rainbowValue);
+
+		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "PRESS S TO START", gentle::Vec2<float> { 10.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
 		return;
 	}
@@ -473,14 +512,14 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	}
 
 	// Balls, Level & Score
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", gentle::Vec2<float> { 10.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.lives, gentle::Vec2<float> { 25.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", gentle::Vec2<float> { 10.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.lives, gentle::Vec2<float> { 25.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", gentle::Vec2<float> { 65.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.level, gentle::Vec2<float> { 80.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", gentle::Vec2<float> { 65.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.level, gentle::Vec2<float> { 80.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", gentle::Vec2<float> { 120.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.score, gentle::Vec2<float> { 135.0f, 10.0f}, FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", gentle::Vec2<float> { 120.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.score, gentle::Vec2<float> { 135.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 }
 
 void gentle::Initialize(const GameMemory &gameMemory, const RenderBuffer &renderBuffer)
