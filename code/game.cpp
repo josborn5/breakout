@@ -283,11 +283,11 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 				newBallState.position = hitBlockResult.collisions[1].position;
 				checkCollision = true;
 
-				if (hitBlockResult.collisions[1].side == gentle::Top || hitBlockResult.collisions[1].side == gentle::Bottom)
+				if (!state->isCometActive && (hitBlockResult.collisions[1].side == gentle::Top || hitBlockResult.collisions[1].side == gentle::Bottom))
 				{
 					newBallState.velocity.y = -newBallState.velocity.y;
 				}
-				else if (hitBlockResult.collisions[1].side == gentle::Top || hitBlockResult.collisions[1].side == gentle::Bottom)
+				else if (!state->isCometActive && (hitBlockResult.collisions[1].side == gentle::Left || hitBlockResult.collisions[1].side == gentle::Right))
 				{
 					newBallState.velocity.x = -newBallState.velocity.x;
 				}
