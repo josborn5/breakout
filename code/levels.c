@@ -104,8 +104,7 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 				{
 					case 'M':
 						block->powerUp.type = Multiball;
-						block->powerUp.prevPosition = gentle::Vec2<float> { block->position.x, block->position.y };
-						block->powerUp.position = block->powerUp.prevPosition;
+						block->powerUp.position = gentle::Vec2<float> { block->position.x, block->position.y };
 						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
 						block->powerUp.velocity = POWER_UP_VELOCITY;
 						block->powerUp.exists = false;
@@ -113,8 +112,7 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						break;
 					case 'C':
 						block->powerUp.type = Comet;
-						block->powerUp.prevPosition = gentle::Vec2<float> { block->position.x, block->position.y };
-						block->powerUp.position = block->powerUp.prevPosition;
+						block->powerUp.position = gentle::Vec2<float> { block->position.x, block->position.y };
 						block->powerUp.halfSize = POWER_UP_HALF_SIZE;
 						block->powerUp.velocity = POWER_UP_VELOCITY;
 						block->powerUp.exists = false;
@@ -122,7 +120,6 @@ static void PopulateBlocksForLevel(int level, Block* block, int blockArraySize, 
 						break;
 					default:
 						block->powerUp.type = Nothing;
-						block->powerUp.prevPosition = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.position = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.halfSize = gentle::Vec2<float> { 0.0f, 0.0f };
 						block->powerUp.velocity = gentle::Vec2<float> { 0.0f, 0.0f };

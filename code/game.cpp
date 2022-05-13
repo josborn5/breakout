@@ -141,7 +141,6 @@ static void InitializeGameState(GameState *state, gentle::Vec2<int> pixelRect, c
 	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
 	state->player.position.x = ClampFloat(minPlayerX, state->player.position.x, maxPlayerX);
 	state->player.position.y = 20;
-	state->player.prevPosition = state->player.position;
 	state->player.velocity = gentle::Vec2<float> { 0.0f, 0.0f };
 
 	state->score = 0;
@@ -196,11 +195,14 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	}
 
 	// Update player state
-	state->player.prevPosition.x = state->player.position.x;
-	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
-
-	state->player.position.x = ClampFloat(minPlayerX, state->player.position.x, maxPlayerX);
-	state->player.velocity.x = (state->player.position.x - state->player.prevPosition.x) / dt;
+	gentle::Rect<float> newPlayerState;
+	newPlayerState.halfSize = state->player.halfSize;
+	newPlayerState.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
+	newPlayerState.position.x = ClampFloat(minPlayerX, newPlayerState.position.x, maxPlayerX);
+	newPlayerState.position.y = state->player.position.y;
+	newPlayerState.velocity.x = (newPlayerState.position.x - state->player.position.x) / dt;
+	newPlayerState.velocity.y = 0.0f;
+	state->player = newPlayerState;
 
 	// Update ball & block state
 	for (int i = 0; i < BALL_ARRAY_SIZE; i += 1)
@@ -379,8 +381,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	{
 		if (!block->powerUp.exists) continue;
 
-		block->powerUp.prevPosition = block->powerUp.position;
-		block->powerUp.position = gentle::AddVectors(block->powerUp.prevPosition, gentle::MultiplyVectorByScalar(block->powerUp.velocity, dt));
+		block->powerUp.position = gentle::AddVectors(block->powerUp.position, gentle::MultiplyVectorByScalar(block->powerUp.velocity, dt));
 
 		// Can get away with a super simple position check for the power up falling off screen here
 		if (block->powerUp.position.y < Y_DIM_ORIGIN)
