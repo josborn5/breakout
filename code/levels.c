@@ -1,8 +1,8 @@
 #include "game.h"
 #include "../../win32-platform/bin/math.hpp"
 
-const gentle::Vec2<float> POWER_UP_VELOCITY = gentle::Vec2<float> { 0.0f, -5.0f };
-const gentle::Vec2<float> POWER_UP_HALF_SIZE = gentle::Vec2<float> { 0.5f, 0.5f };
+const gentle::Vec2<float> POWER_UP_VELOCITY = gentle::Vec2<float> { 0.0f, -50.0f };
+const gentle::Vec2<float> POWER_UP_HALF_SIZE = gentle::Vec2<float> { 5.0f, 5.0f };
 
 char *levels[10] = {
 "\

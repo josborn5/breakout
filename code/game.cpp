@@ -29,20 +29,20 @@ TODO (in no particular order):
 #include "../../win32-platform/bin/math.hpp"
 #include "../../win32-platform/bin/collision.hpp"
 #include "../../win32-platform/bin/geometry.hpp"
+#include "../../win32-platform/bin/software_rendering.hpp"
 
 #include "math.c"
-#include "world_transforms.c"
 #include "software_rendering.c"
 #include "platform_common.c"
 #include "levels.c"
 #include "main_win32.cpp"
 
-#define BLOCK_AREA gentle::Vec2<float> { 100.0f, 20.0f }
-#define BLOCK_AREA_POS gentle::Vec2<float> { 30.0f, 70.0f }
-#define BALL_HALF_SIZE gentle::Vec2<float> { 1.0f, 1.0f }
+#define BLOCK_AREA gentle::Vec2<float> { 800.0f, 200.0f }
+#define BLOCK_AREA_POS gentle::Vec2<float> { 300.0f, 600.0f }
+#define BALL_HALF_SIZE gentle::Vec2<float> { 10.0f, 10.0f }
 
-const float MIN_BALL_SPEED = 40.0f;
-const float LEVEL_CHANGE_BALL_SPEED = 5.0f;
+const float MIN_BALL_SPEED = 400.0f;
+const float LEVEL_CHANGE_BALL_SPEED = 50.0f;
 
 const uint32_t BACKGROUND_COLOR = 0x551100;
 const uint32_t BALL_COLOR = 0x0000FF;
@@ -52,17 +52,17 @@ const uint32_t TEXT_COLOR = 0xFFFF00;
 const int BLOCK_SCORE = 10;
 const int NO_BLOCK_HIT_INDEX = -1;
 
-const float BLOCK_WIDTH = 6.0f;
-const float BLOCK_HEIGHT = 3.0f;
-const float SMALL_FONT_SIZE = 2.0f;
-const float TITLE_FONT_SIZE = 12.0f;
-const float BAT_WIDTH = 10.0f;
-const float BAT_HEIGHT = 1.0f;
+const float BLOCK_WIDTH = 60.0f;
+const float BLOCK_HEIGHT = 30.0f;
+const float SMALL_FONT_SIZE = 20.0f;
+const float TITLE_FONT_SIZE = 120.0f;
+const float BAT_WIDTH = 100.0f;
+const float BAT_HEIGHT = 10.0f;
 
 const int X_DIM_ORIGIN = 0;
-const int X_DIM_BASE = 160;
+const int X_DIM_BASE = 1280;
 const int Y_DIM_ORIGIN = 0;
-const int Y_DIM_BASE = 90;
+const int Y_DIM_BASE = 720;
 const int STARTING_LIVES = 3;
 
 const Boundary topBoundary = { Top, Y_DIM_BASE };
@@ -101,8 +101,8 @@ static void ResetBalls()
 		gamestate.balls[i].velocity.y = MIN_BALL_SPEED;
 		gamestate.balls[i].velocity.x = MIN_BALL_SPEED;
 
-		gamestate.balls[i].position.y = 20 + gamestate.balls[i].halfSize.y;
-		gamestate.balls[i].position.x = 20 + gamestate.balls[i].halfSize.x;
+		gamestate.balls[i].position.y = 100 + gamestate.balls[i].halfSize.y;
+		gamestate.balls[i].position.x = 100 + gamestate.balls[i].halfSize.x;
 	}
 }
 
@@ -138,9 +138,10 @@ static void InitializeGameState(GameState *state, gentle::Vec2<int> pixelRect, c
 	minPlayerX = 0.0f;
 	maxPlayerX = (float)X_DIM_BASE;
 
-	state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
+	// state->player.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
+	state->player.position.x = (float)input.mouse.x;
 	state->player.position.x = ClampFloat(minPlayerX, state->player.position.x, maxPlayerX);
-	state->player.position.y = 20;
+	state->player.position.y = 200;
 	state->player.velocity = gentle::Vec2<float> { 0.0f, 0.0f };
 
 	state->score = 0;
@@ -197,8 +198,8 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	// Update player state
 	gentle::Rect<float> newPlayerState;
 	newPlayerState.halfSize = state->player.halfSize;
-	newPlayerState.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
-	newPlayerState.position.x = ClampFloat(minPlayerX, newPlayerState.position.x, maxPlayerX);
+	// newPlayerState.position.x = TransformPixelCoordToGameCoord(pixelRect, GAME_RECT, input.mouse.x, input.mouse.y).x;
+	newPlayerState.position.x = ClampFloat(minPlayerX, (float)input.mouse.x, maxPlayerX);
 	newPlayerState.position.y = state->player.position.y;
 	newPlayerState.velocity.x = (newPlayerState.position.x - state->player.position.x) / dt;
 	newPlayerState.velocity.y = 0.0f;
@@ -436,7 +437,7 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 {
 	if (state.mode == ReadyToStart)
 	{
-		ClearScreen(renderBuffer, 0x050505);
+		gentle::ClearScreen(renderBuffer, 0x050505);
 
 		if (rainbowColor == (255 * 4))
 		{
@@ -473,18 +474,22 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 			bValue = 255;
 		}
 		uint32_t rainbowValue = (rValue << 16) | (gValue << 8) | (bValue << 0);
-		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BREAKOUT", gentle::Vec2<float> { 40.0f, 50.0f}, TITLE_FONT_SIZE, rainbowValue);
+		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BREAKOUT", gentle::Vec2<float> { 250.0f, 400.0f}, TITLE_FONT_SIZE, rainbowValue);
 
-		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "PRESS S TO START", gentle::Vec2<float> { 10.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+		DrawAlphabetCharacters(renderBuffer, GAME_RECT, "PRESS S TO START", gentle::Vec2<float> { 100.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
 		return;
 	}
 
 	// background
-	ClearScreenAndDrawRect(renderBuffer, GAME_RECT, BACKGROUND_COLOR, 0x000000, worldHalfSize, worldPosition);
+	gentle::ClearScreen(renderBuffer, 0x000000);
+	gentle::Rect<float> worldRect;
+	worldRect.position = worldPosition;
+	worldRect.halfSize = worldHalfSize;
+	gentle::DrawRect(renderBuffer, BACKGROUND_COLOR, worldRect);
 
 	// player
-	DrawRect(renderBuffer, GAME_RECT, BAT_COLOR, state.player.halfSize, state.player.position);
+	gentle::DrawRect(renderBuffer, BAT_COLOR, state.player);
 
 	// blocks
 	allBlocksCleared = true;
@@ -513,14 +518,14 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	}
 
 	// Balls, Level & Score
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", gentle::Vec2<float> { 10.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.lives, gentle::Vec2<float> { 25.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "BALLS", gentle::Vec2<float> { 100.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.lives, gentle::Vec2<float> { 250.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", gentle::Vec2<float> { 65.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.level, gentle::Vec2<float> { 80.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "LEVEL", gentle::Vec2<float> { 450.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.level, gentle::Vec2<float> { 600.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 
-	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", gentle::Vec2<float> { 120.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
-	DrawNumber(renderBuffer, GAME_RECT, state.score, gentle::Vec2<float> { 135.0f, 10.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawAlphabetCharacters(renderBuffer, GAME_RECT, "SCORE", gentle::Vec2<float> { 900.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
+	DrawNumber(renderBuffer, GAME_RECT, state.score, gentle::Vec2<float> { 1050.0f, 100.0f}, SMALL_FONT_SIZE, TEXT_COLOR);
 }
 
 void gentle::Initialize(const GameMemory &gameMemory, const RenderBuffer &renderBuffer)

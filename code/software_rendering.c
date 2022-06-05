@@ -1,19 +1,6 @@
 #include "../../win32-platform/bin/platform.hpp"
 #include "../../win32-platform/bin/math.hpp"
 
-static void ClearScreen(const RenderBuffer &renderBuffer, uint32_t color)
-{
-	uint32_t *pixel = renderBuffer.pixels;
-
-	for (int y = 0; y < renderBuffer.height; y += 1)
-	{
-		for (int x = 0; x< renderBuffer.width; x += 1)
-		{
-			*pixel = color;
-			pixel++;
-		}
-	}
-}
 
 static void DrawRectInPixels(const RenderBuffer &renderBuffer, uint32_t color, int x0, int y0, int x1, int y1)
 {
@@ -36,183 +23,16 @@ static void DrawRectInPixels(const RenderBuffer &renderBuffer, uint32_t color, i
 	}
 }
 
-static void PlotPixel(const RenderBuffer &renderBuffer, uint32_t color, int x, int y)
-{
-	int positionStartOfRow = renderBuffer.width * y;
-	int positionStartOfX0InRow = positionStartOfRow + x;
-	uint32_t* pixel = renderBuffer.pixels + positionStartOfX0InRow;
-	*pixel = color;
-}
 
-static void DrawVerticalLineInPixels(const RenderBuffer &renderBuffer, uint32_t color, int x, int y0, int y1)
-{
-	int yDiff = y1 - y0;
-	int yDiffMod = (yDiff < 0) ? -1 * yDiff : yDiff;
-	int yIncrement = (yDiff < 0) ? -1 : 1;
-	PlotPixel(renderBuffer, color, x, y0);
-	for (int i = 0; i <= yDiffMod; i += 1)
-	{
-		y0 += yIncrement;
-		PlotPixel(renderBuffer, color, x, y0);
-	}
-}
-
-static void DrawHorizontalLineInPixels(const RenderBuffer &renderBuffer, uint32_t color, int x0, int x1, int y)
-{
-	int xDiff = x1 - x0;
-	int xDiffMod = (xDiff < 0) ? -1 * xDiff : xDiff;
-	int xIncrement = (xDiff < 0) ? -1 : 1;
-	PlotPixel(renderBuffer, color, x0, y);
-	for (int i = 0; i < xDiffMod; i += 1)
-	{
-		x0 += xIncrement;
-		PlotPixel(renderBuffer, color, x0, y);
-	}
-}
-
-// Implemented with Bresenham's algorithm
-static void DrawLineInPixels(const RenderBuffer &renderBuffer, uint32_t color, int x0, int y0, int x1, int y1)
-{
-	// Make sure writing to the render buffer does not escape its bounds
-	x0 = ClampInt(1, x0, renderBuffer.width);
-	x1 = ClampInt(1, x1, renderBuffer.width);
-	y0 = ClampInt(1, y0, renderBuffer.height);
-	y1 = ClampInt(1, y1, renderBuffer.height);
-	
-	int xDiff = x1 - x0;
-	if (xDiff == 0)
-	{
-		DrawVerticalLineInPixels(renderBuffer, color, x0, y0, y1);
-		return;
-	}
-
-	int yDiff = y1 - y0;
-	if (yDiff == 0)
-	{
-		DrawHorizontalLineInPixels(renderBuffer, color, x0, x1, y0);
-		return;
-	}
-
-	int xDiffMod = (xDiff < 0) ? -1 * xDiff : xDiff;
-	int yDiffMod = (yDiff < 0) ? -1 * yDiff : yDiff;
-	int modDiff = yDiffMod - xDiffMod;
-	int xIncrement = (xDiff < 0) ? -1 : 1;
-	int yIncrement = (yDiff < 0) ? -1 : 1;
-
-	PlotPixel(renderBuffer, color, x0, y0);
-	// If the gradient is 1 simply increment both X & Y at on every iteration
-	if (modDiff == 0)
-	{
-		for (int i = 0; i < xDiffMod; ++i)
-		{
-			x0 += xIncrement;
-			y0 += yIncrement;
-			PlotPixel(renderBuffer, color, x0, y0);
-		}
-		return;
-	}
-
-	// If the gradient is more than one then y gets incremented on every step along the line and x sometimes gets incremented
-	// If the gradient is less than one then x gets incremented on every step along the line and y sometimes gets incremented
-	bool isLongDimensionX = (modDiff < 0);
-	int longDimensionDiff;
-	int* longDimensionVar;	// Make this a pointer so PlotPixel can still be called with x0 & y0 arguments
-	int longDimensionIncrement;
-	int shortDimensionDiff;
-	int* shortDimensionVar;	// Make this a pointer so PlotPixel can still be called with x0 & y0 arguments
-	int shortDimensionIncrement;
-
-	if (isLongDimensionX)
-	{
-		longDimensionDiff = xDiffMod;
-		longDimensionVar = &x0;
-		longDimensionIncrement = xIncrement;
-
-		shortDimensionDiff = yDiffMod;
-		shortDimensionVar = &y0;
-		shortDimensionIncrement = yIncrement;
-	}
-	else
-	{
-		longDimensionDiff = yDiffMod;
-		longDimensionVar = &y0;
-		longDimensionIncrement = yIncrement;
-
-		shortDimensionDiff = xDiffMod;
-		shortDimensionVar = &x0;
-		shortDimensionIncrement = xIncrement;
-	}
-
-	int p = (2 * xDiffMod) - yDiffMod;
-	int negativePIncrement = 2 * shortDimensionDiff;
-	int positivePIncrement = negativePIncrement - (2 * longDimensionDiff);
-
-	for (int i = 1; i < longDimensionDiff; i += 1)
-	{
-		*longDimensionVar += longDimensionIncrement;
-		if (p < 0)
-		{
-			p += negativePIncrement;
-		}
-		else
-		{
-			p += positivePIncrement;
-			*shortDimensionVar += shortDimensionIncrement;
-		}
-		PlotPixel(renderBuffer, color, x0, y0);
-	}
-}
-
+// !!! https://youtu.be/Mi98zVBb6Wk?list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&t=2865
 static void DrawRect(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, uint32_t color, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p)
 {
-	int x0, y0, x1, y1;
-	gentle::Vec2<int> pixelRect = { renderBuffer.width, renderBuffer.height };
-
-	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
+	int x0 = (int)p.x - (int)halfSize.x;
+	int x1 = (int)p.x + (int)halfSize.x;
+	int y0 = (int)p.y - (int)halfSize.y;
+	int y1 = (int)p.y + (int)halfSize.y;
 
 	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
-}
-
-static void ClearScreenAndDrawRect(const RenderBuffer &renderBuffer, const gentle::Vec2<int> gameRect, uint32_t color, uint32_t clearColor, const gentle::Vec2<float> &halfSize, const gentle::Vec2<float> &p)
-{
-	int x0, y0, x1, y1;
-	gentle::Vec2<int> pixelRect = { renderBuffer.width, renderBuffer.height };
-	TranformVectorsToPixels(pixelRect, gameRect, halfSize, p, &x0, &y0, &x1, &y1);
-
-	// draw the given rectangle
-	DrawRectInPixels(renderBuffer, color, x0, y0, x1, y1);
-
-	// draw rectangles around the given rectangle to clear the background
-	DrawRectInPixels(renderBuffer, clearColor, 0, 0, x0, renderBuffer.height);						// left of rect
-	DrawRectInPixels(renderBuffer, clearColor, x1, 0, renderBuffer.width, renderBuffer.height);	// right of rect
-	DrawRectInPixels(renderBuffer, clearColor, x0, 0, x1, y0);										// above rect
-	DrawRectInPixels(renderBuffer, clearColor, x0, y1, x1, renderBuffer.height);					// below rect
-}
-
-static void DrawSprite(const RenderBuffer &renderBuffer, const gentle::Vec2<int> &gameRect, char *sprite, const gentle::Vec2<float> &p, float blockHalfSize, uint32_t color)
-{
-	gentle::Vec2<float> pCopy = gentle::Vec2<float> { p.x, p.y };
-
-	float blockSize = blockHalfSize * 2.0f;
-	gentle::Vec2<float> blockHalf = gentle::Vec2<float> { blockHalfSize, blockHalfSize };
-
-	while (*sprite)
-	{
-		if (*sprite == '\n')
-		{
-			pCopy.y -= blockSize;	// We're populating blocks in the sprint left to right, top to bottom. So y is decreasing.
-			pCopy.x = p.x; // reset cursor to start of next row
-		}
-		else
-		{
-			if (*sprite != ' ')
-			{
-				DrawRect(renderBuffer, gameRect, color, blockHalf, pCopy);
-			}
-			pCopy.x += blockSize;
-		}
-		sprite++;
-	}
 }
 
 // Render characters
@@ -563,7 +383,7 @@ static void DrawAlphabetCharacters(const RenderBuffer &renderBuffer, const gentl
 			int letterIndex = GetLetterIndex(*letterAt);
 			char *letter = letters[letterIndex];
 
-			DrawSprite(renderBuffer, gameRect, letter, pCopy, blockHalfSize, color);
+			gentle::DrawSprite(renderBuffer, letter, pCopy, blockHalfSize, color);
 		}
 		pCopy.x += characterWidth;
 	}
@@ -594,7 +414,7 @@ static void DrawNumber(const RenderBuffer &renderBuffer, const gentle::Vec2<int>
 		workingNumber -= (digit * baseTenMultiplier);
 
 		char *charDigit = digits[digit];
-		DrawSprite(renderBuffer, gameRect, charDigit, pCopy, blockHalfSize, color);
+		gentle::DrawSprite(renderBuffer, charDigit, pCopy, blockHalfSize, color);
 
 		pCopy.x += characterWidth;
 	}
