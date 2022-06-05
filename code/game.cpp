@@ -491,14 +491,19 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	// player
 	gentle::DrawRect(renderBuffer, BAT_COLOR, state.player);
 
-	// blocks
+	// blocks & powerups
 	allBlocksCleared = true;
-	for (const Block *block = state.blocks; block != state.blocks + ArrayCount(state.blocks); block++)
+	for (int i = 0; i < BLOCK_ARRAY_SIZE; i += 1)
 	{
-		if (!block->exists) continue;
+		Block block = state.blocks[i];
+		if (block.exists) {
+			gentle::DrawRect(renderBuffer, block.color, block);
+			allBlocksCleared = false;
+		}
 
-		allBlocksCleared = false;
-		DrawRect(renderBuffer, GAME_RECT, block->color, block->halfSize, block->position);
+		if (block.powerUp.exists) {
+			gentle::DrawRect(renderBuffer, block.powerUp.color, block.powerUp);
+		}
 	}
 
 	// ball
@@ -506,15 +511,7 @@ static void RenderGameState(const RenderBuffer &renderBuffer, const GameState &s
 	{
 		if (!state.balls[i].exists) continue;
 
-		DrawRect(renderBuffer, GAME_RECT, BALL_COLOR, state.balls[i].halfSize, state.balls[i].position);
-	}
-
-	// power ups
-	for (const Block *block = state.blocks; block != state.blocks + ArrayCount(state.blocks); block++)
-	{
-		if (!block->powerUp.exists) continue;
-
-		DrawRect(renderBuffer, GAME_RECT, block->powerUp.color, block->powerUp.halfSize, block->powerUp.position);
+		gentle::DrawRect(renderBuffer, BALL_COLOR, state.balls[i]);
 	}
 
 	// Balls, Level & Score
