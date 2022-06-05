@@ -25,7 +25,6 @@ TODO (in no particular order):
 #include "game.h"
 #include "../../win32-platform/bin/platform.hpp"
 #include "../../win32-platform/bin/game.hpp"
-#include "utils.h"
 #include "../../win32-platform/bin/math.hpp"
 #include "../../win32-platform/bin/collision.hpp"
 #include "../../win32-platform/bin/geometry.hpp"
@@ -378,26 +377,27 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	}
 
 	// Update power up state
-	for (Block *block = state->blocks; block != state->blocks + ArrayCount(state->blocks); block++)
+	for (int i = 0; i < BLOCK_ARRAY_SIZE; i += 1)
 	{
-		if (!block->powerUp.exists) continue;
+		Block block = state->blocks[i];
+		if (!block.powerUp.exists) continue;
 
-		block->powerUp.position = gentle::AddVectors(block->powerUp.position, gentle::MultiplyVectorByScalar(block->powerUp.velocity, dt));
+		block.powerUp.position = gentle::AddVectors(block.powerUp.position, gentle::MultiplyVectorByScalar(block.powerUp.velocity, dt));
 
 		// Can get away with a super simple position check for the power up falling off screen here
-		if (block->powerUp.position.y < Y_DIM_ORIGIN)
+		if (block.powerUp.position.y < Y_DIM_ORIGIN)
 		{
-			block->powerUp.exists = false;
+			block.powerUp.exists = false;
 		}
 		else
 		{
-			gentle::CollisionResult powerUpCollision = gentle::CheckCollisionBetweenRects(state->player, block->powerUp, dt);
+			gentle::CollisionResult powerUpCollision = gentle::CheckCollisionBetweenRects(state->player, block.powerUp, dt);
 
 			if (powerUpCollision.collisions[1].side != gentle::None)
 			{
-				block->powerUp.exists = false;
+				block.powerUp.exists = false;
 
-				switch (block->powerUp.type)
+				switch (block.powerUp.type)
 				{
 					case Comet:
 						state->isCometActive = true;

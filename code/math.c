@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "utils.h"
 
 static float MaxFloat(float val1, float val2)
 {
