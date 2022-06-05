@@ -110,6 +110,7 @@ static void StartLevel(int newLevel)
 	allBlocksCleared = false;
 
 	gamestate.isCometActive = false;
+	gamestate.levelTransitionTimer = 5000.0f;
 
 	ResetBalls();
 
@@ -236,7 +237,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 			{
 				Block block = state->blocks[j];
 				if (!block.exists) continue;
-				blockBallCollisionResult = CheckCollisionBetweenRects(block, state->balls[i], minCollisionTime);
+				blockBallCollisionResult = gentle::CheckCollisionBetweenRects(block, state->balls[i], minCollisionTime);
 				if (blockBallCollisionResult.collisions[1].side != gentle::None)
 				{
 					blockHitIndex = j;
@@ -317,7 +318,7 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 				{
 					newBallState.velocity.y = -newBallState.velocity.y;
 				}
-				else if (ballWallCollision.wall.side == Bottom)
+				else if (ballWallCollision.wall.side == Bottom && !allBlocksCleared)
 				{
 					newBallState.exists = false;
 
@@ -359,18 +360,6 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 			collisionCheckCount += 1;
 		}
 
-		float minBallSpeed = (allBlocksCleared) ? 0 : MIN_BALL_SPEED;
-		// add some air resistance so ball slows down to normal speed after a while
-		float ballSpeed = gentle::Length(state->balls[i].velocity);
-		if (ballSpeed > minBallSpeed)
-		{
-			float dSpeed = ballSpeed - (0.995f * ballSpeed);
-			float dVelX = dSpeed * state->balls[i].velocity.x / ballSpeed;
-			float dVelY = dSpeed * state->balls[i].velocity.y / ballSpeed;
-			state->balls[i].velocity.x -= dVelX;
-			state->balls[i].velocity.y -= dVelY;
-		}
-
 		// final bounds check to make sure ball doesn't leave the world
 		state->balls[i].position.x = ClampFloat(0 + state->balls[i].halfSize.x, state->balls[i].position.x, X_DIM_BASE - state->balls[i].halfSize.x);
 		state->balls[i].position.y = ClampFloat(0 + state->balls[i].halfSize.y, state->balls[i].position.y, Y_DIM_BASE - state->balls[i].halfSize.y);
@@ -379,25 +368,25 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 	// Update power up state
 	for (int i = 0; i < BLOCK_ARRAY_SIZE; i += 1)
 	{
-		Block block = state->blocks[i];
-		if (!block.powerUp.exists) continue;
+		Block *block = &state->blocks[i];
+		if (!block->powerUp.exists) continue;
 
-		block.powerUp.position = gentle::AddVectors(block.powerUp.position, gentle::MultiplyVectorByScalar(block.powerUp.velocity, dt));
+		block->powerUp.position = gentle::AddVectors(block->powerUp.position, gentle::MultiplyVectorByScalar(block->powerUp.velocity, dt));
 
 		// Can get away with a super simple position check for the power up falling off screen here
-		if (block.powerUp.position.y < Y_DIM_ORIGIN)
+		if (block->powerUp.position.y < Y_DIM_ORIGIN)
 		{
-			block.powerUp.exists = false;
+			block->powerUp.exists = false;
 		}
 		else
 		{
-			gentle::CollisionResult powerUpCollision = gentle::CheckCollisionBetweenRects(state->player, block.powerUp, dt);
+			gentle::CollisionResult powerUpCollision = gentle::CheckCollisionBetweenRects(state->player, block->powerUp, dt);
 
 			if (powerUpCollision.collisions[1].side != gentle::None)
 			{
-				block.powerUp.exists = false;
+				block->powerUp.exists = false;
 
-				switch (block.powerUp.type)
+				switch (block->powerUp.type)
 				{
 					case Comet:
 						state->isCometActive = true;
@@ -426,10 +415,14 @@ static void UpdateGameState(GameState *state, gentle::Vec2<int> pixelRect, const
 		}
 	}
 
-	if (allBlocksCleared && (gentle::Length(state->balls[0].velocity) < LEVEL_CHANGE_BALL_SPEED))
+	if (allBlocksCleared)
 	{
-		state->level += 1;
-		StartLevel(state->level);
+		state->levelTransitionTimer -= dt;
+		if (state->levelTransitionTimer < 0)
+		{
+			state->level += 1;
+			StartLevel(state->level);
+		}
 	}
 }
 

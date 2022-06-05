@@ -63,6 +63,7 @@ struct {
 	int score;
 	int lives;
 	Mode mode;
+	float levelTransitionTimer;
 } typedef GameState;
 
 #endif
